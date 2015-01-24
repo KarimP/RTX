@@ -72,6 +72,7 @@ void memory_init(void)
 	gp_pcbs = (PCB **)p_end;
 	p_end += NUM_TEST_PROCS * sizeof(PCB *);
   
+	//allocate PCBs
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		gp_pcbs[i] = (PCB *)p_end;
 		p_end += sizeof(PCB); 
@@ -88,7 +89,27 @@ void memory_init(void)
 		--gp_stack; 
 	}
 	
-	/* allocate memory for heap, not implemented yet*/
+	//allocate memory for ready queue
+	ready_queue = (process_queue**)p_end;
+	p_end += NUM_PRIORITIES * sizeof(process_queue *);
+	
+	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
+		ready_queue[i] = (process_queue *)p_end;
+		p_end += sizeof(process_queue)*NUM_TEST_PROCS;
+	}
+	initialize_priority_queue(ready_queue);
+	
+	//allocate memory for blocked queue
+	blocked_queue = (process_queue**)p_end;
+	p_end += NUM_PRIORITIES * sizeof(process_queue*);
+	
+	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
+		blocked_queue[i] = (process_queue *)p_end;
+		p_end += sizeof(process_queue)*NUM_TEST_PROCS;
+	}
+	initialize_priority_queue(blocked_queue);
+	
+	/* allocate memory for heap*/
 	//initialize memory linked list
 	start_mem_blk = (mem_blk*)p_end;
 	
@@ -101,9 +122,11 @@ void memory_init(void)
 }
 
 void run_memory_test() 
+{
 	void *blk; 
 	
 	//Test one memory block allocation
+	mem_blk* start = start_mem_blk;
 	blk = k_request_memory_block();
 	k_release_memory_block(blk);
 }

@@ -9,6 +9,7 @@
 #define K_MEM_H_
 
 #include "k_rtx.h"
+#include "k_queue.h"
 
 /* ----- Definitions ----- */
 #define RAM_END_ADDR 0x10008000
@@ -18,6 +19,9 @@
 extern unsigned int Image$$RW_IRAM1$$ZI$$Limit; 
 extern PCB **gp_pcbs;
 extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
+
+extern process_queue **ready_queue;
+extern process_queue **blocked_queue;
 
 /* ----- Functions ------ */
 void memory_init(void);

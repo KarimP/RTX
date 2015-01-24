@@ -36,7 +36,7 @@ typedef enum {NEW = 0, RDY, RUN} PROC_STATE_E;
 */
 typedef struct pcb 
 { 
-	//struct pcb *mp_next;  /* next pcb, not used in this example */  
+	struct pcb *mp_next;  /* next pcb, not used in this example */  
 	U32 *mp_sp;		/* stack pointer of the process */
 	U32 m_pid;		/* process id */
 	PROC_STATE_E m_state;   /* state of the process */      
@@ -52,3 +52,27 @@ typedef struct proc_init
 } PROC_INIT;
 
 #endif // ! K_RTX_H_
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
