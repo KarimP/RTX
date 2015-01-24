@@ -21,9 +21,16 @@ typedef struct mem_blk {
 /* ----- Global Variables ----- */
 U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
                /* The first stack starts at the RAM high address */
-	       /* stack grows down. Fully decremental stack */
+							/* stack grows down. Fully decremental stack */
 
+/**
+ * @brief: Start of the linked list of the memory blocks
+ */
 mem_blk *start_mem_blk;
+
+/**
+ * @brief: Start of the heap allocated for memory blocks
+ */
 U8 *p_end;
 
 /**
@@ -55,7 +62,6 @@ U8 *p_end;
 void memory_init(void)
 {
 	int i;
-	void *blk; //FOR TESTING
 	
 	p_end = (U8 *)&Image$$RW_IRAM1$$ZI$$Limit;
   
@@ -81,6 +87,7 @@ void memory_init(void)
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
 		--gp_stack; 
 	}
+	
 	/* allocate memory for heap, not implemented yet*/
 	//initialize memory linked list
 	start_mem_blk = (mem_blk*)p_end;
@@ -90,11 +97,15 @@ void memory_init(void)
 		start_mem_blk += MEM_BLK_SIZE;
 	}
 	
-	//TEST ALLOCATION
-	start_mem_blk = (mem_blk*)p_end;
+	start_mem_blk = (mem_blk*)p_end;  
+}
+
+void run_memory_test() 
+	void *blk; 
+	
+	//Test one memory block allocation
 	blk = k_request_memory_block();
 	k_release_memory_block(blk);
-  
 }
 
 /**
@@ -103,7 +114,6 @@ void memory_init(void)
  * @return: The top of the stack (i.e. high address)
  * POST:  gp_stack is updated.
  */
-
 U32 *alloc_stack(U32 size_b) 
 {
 	U32 *sp;
