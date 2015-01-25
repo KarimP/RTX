@@ -8,7 +8,7 @@
 /* ----- Definitations ----- */
 #define RTX_ERR -1
 #define NULL 0
-#define NUM_TEST_PROCS 2
+#define NUM_TEST_PROCS 3
 /* Process Priority. The bigger the number is, the lower the priority is*/
 #define HIGH    0
 #define MEDIUM  1
@@ -24,6 +24,8 @@ typedef struct proc_init
 	int m_pid;	        /* process id */ 
 	int m_priority;         /* initial priority, not used in this example. */ 
 	int m_stack_size;       /* size of stack in words */
+	struct pcb *mp_next;
+	
 	void (*mpf_start_pc) ();/* entry point of the process */    
 } PROC_INIT;
 

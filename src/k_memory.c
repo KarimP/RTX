@@ -59,6 +59,47 @@ U8 *p_end;
 0x10000000+---------------------------+ Low Address
 */
 
+// TODO: re,use priority from PCB 
+void run_PQ_test() 
+{
+	enqueue_priority_queue(ready_queue, gp_pcbs[0], 1);
+	
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+#endif
+	
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->last = 0x%x \n", ready_queue[1]->last);
+#endif
+	
+	enqueue_priority_queue(ready_queue, gp_pcbs[1], 1);
+	
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->last = 0x%x \n", ready_queue[1]->last);
+#endif
+	
+	enqueue_priority_queue(ready_queue, gp_pcbs[2], 1);
+	
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->last = 0x%x \n", ready_queue[1]->last);
+#endif
+
+	dequeue_priority_queue(ready_queue, 1);
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+#endif
+
+	dequeue_priority_queue(ready_queue, 1);
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+#endif
+
+	dequeue_priority_queue(ready_queue, 1);
+#ifdef DEBUG_0  
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+#endif
+}
+
 void memory_init(void)
 {
 	int i;
@@ -119,6 +160,8 @@ void memory_init(void)
 	}
 	
 	start_mem_blk = (mem_blk*)p_end;  
+	
+	run_PQ_test();
 }
 
 void run_memory_test() 
