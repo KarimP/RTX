@@ -29,4 +29,7 @@ void initialize_priority_queue(process_queue**);
 int enqueue_priority_queue(process_queue**, PCB*, int);
 PCB *dequeue_priority_queue(process_queue**, int);
 
+int set_process_priority(int, int);
+int get_process_priority(int);
+
 #endif /* ! K_QUEUE_H_ */

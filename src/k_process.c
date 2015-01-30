@@ -44,7 +44,8 @@ void process_init()
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_proc_table[i].m_pid = g_test_procs[i].m_pid;
 		g_proc_table[i].m_stack_size = g_test_procs[i].m_stack_size;
-		g_proc_table[i].mpf_start_pc = g_test_procs[i].mpf_start_pc;		
+		g_proc_table[i].mpf_start_pc = g_test_procs[i].mpf_start_pc;
+		g_proc_table[i].m_priority = LOWEST_PRIORITY;
 	}
   
 	/* initilize exception stack frame (i.e. initial context) for each process */
@@ -149,18 +150,3 @@ int k_release_processor(void)
 	process_switch(p_pcb_old);
 	return RTX_OK;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
