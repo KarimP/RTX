@@ -27,7 +27,6 @@ void set_test_procs() {
   
 	g_test_procs[0].mpf_start_pc = &proc1;
 	g_test_procs[1].mpf_start_pc = &proc2;
-	g_test_procs[2].mpf_start_pc = &proc3;
 }
 
 void null_proc(){
@@ -75,15 +74,5 @@ void proc2(void)
 		}
 		uart0_put_char('0' + i%10);
 		i++;
-	}
-}
-
-/**
- * @brief: dummy process
- */
-void proc3(void)
-{
-	while ( 1) {
-		release_processor();
 	}
 }
