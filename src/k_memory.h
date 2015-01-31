@@ -15,6 +15,15 @@
 /* ----- Definitions ----- */
 #define RAM_END_ADDR 0x10008000
 
+typedef struct mem_blk {
+    struct mem_blk *next_blk ;
+} mem_blk;
+
+typedef struct mem_q {
+    mem_blk *first;
+    mem_blk *last;
+} mem_q;
+
 /* ----- Variables ----- */
 /* This symbol is defined in the scatter file (see RVCT Linker User Guide) */
 extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;

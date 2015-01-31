@@ -14,10 +14,6 @@
 
 #define MEM_BLK_SIZE ((128+32)/4)
 
-typedef struct mem_blk {
-	struct mem_blk *next_blk ;
-} mem_blk;
-
 /* ----- Global Variables ----- */
 U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
                /* The first stack starts at the RAM high address */
@@ -150,16 +146,6 @@ void memory_init(void)
 #endif
 }
 
-//void run_memory_test()
-//{
-//	void *blk;
-
-	//Test one memory block allocation
-//	mem_blk* start = start_mem_blk;
-//	blk = k_request_memory_block();
-//	k_release_memory_block(blk);
-//}
-
 /**
  * @brief: allocate stack for a process, align to 8 bytes boundary
  * @param: size, stack size in bytes
@@ -187,12 +173,10 @@ void *k_request_memory_block(void) {
 #ifdef DEBUG_0
 	printf("k_request_memory_block: entering...\n");
 #endif /* ! DEBUG_0 */
-	//return (void *) NULL;
 
 	// atomic ( on ) ;
 
 	while (start_mem_blk == NULL ) {
-
 		//put PCB on blocked_resource_q ;
 		enqueue_priority_queue(blocked_queue, gp_current_process, get_process_priority(gp_current_process->m_pid));
 
@@ -230,17 +214,15 @@ int k_release_memory_block(void *p_mem_blk) {
 	rel_blk->next_blk = start_mem_blk;
 	start_mem_blk = rel_blk;
 
-	// if ( blocked_queue->first != NULL ) {
-		// handle_process_ready ( pop ( blocked resource q ) ) ;
-
+	// removed highest priority blocked process that requested memory previously
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
 		pcb = dequeue_priority_queue(blocked_queue, i);
 		if (pcb != NULL) {
+			pcb->m_state = RDY;
 			enqueue_priority_queue(ready_queue, pcb, i);
 			break;
 		}
 	}
-	// }
 
 #ifdef DEBUG_0
 	printf("\nk_release_memory_block: exiting...\nstart_mem_blk is: 0x%x \n start_mem_blk->next_blk is: 0x%x \n", start_mem_blk, start_mem_blk->next_blk);

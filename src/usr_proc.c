@@ -24,15 +24,9 @@ void set_test_procs() {
 		g_test_procs[i].m_priority=LOWEST;
 		g_test_procs[i].m_stack_size=0x100;
 	}
-  
+
 	g_test_procs[0].mpf_start_pc = &proc1;
 	g_test_procs[1].mpf_start_pc = &proc2;
-}
-
-void null_proc(){
-	while (1){
-		release_processor();
-	}
 }
 
 /**

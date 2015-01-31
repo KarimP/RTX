@@ -39,17 +39,23 @@ void process_init()
 	int i;
 	U32 *sp;
 
-        /* fill out the initialization table */
+	//add null process to proc init table
+	g_proc_table[0].m_pid = 0;
+	g_proc_table[0].m_stack_size = 0x100;
+	g_proc_table[0].mpf_start_pc = &null_proc;
+	g_proc_table[0].m_priority = LOWEST_PRIORITY + 1;
+
+    /* fill out the initialization table */
 	set_test_procs();
-	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
-		g_proc_table[i].m_pid = g_test_procs[i].m_pid;
-		g_proc_table[i].m_stack_size = g_test_procs[i].m_stack_size;
-		g_proc_table[i].mpf_start_pc = g_test_procs[i].mpf_start_pc;
-		g_proc_table[i].m_priority = LOWEST_PRIORITY;
+	for ( i = 1; i <= NUM_TEST_PROCS; ++i ) {
+		g_proc_table[i].m_pid = g_test_procs[i-1].m_pid;
+		g_proc_table[i].m_stack_size = g_test_procs[i-1].m_stack_size;
+		g_proc_table[i].mpf_start_pc = g_test_procs[i-1].mpf_start_pc;
+		g_proc_table[i].m_priority = g_test_procs[i-1].m_priority;
 	}
 
 	/* initilize exception stack frame (i.e. initial context) for each process */
-	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
+	for ( i = 0; i < NUM_TEST_PROCS; ++i ) {
 		int j;
 		(gp_pcbs[i])->m_pid = (g_proc_table[i]).m_pid;
 		(gp_pcbs[i])->m_state = NEW;
@@ -62,6 +68,8 @@ void process_init()
 			*(--sp) = 0x0;
 		}
 		(gp_pcbs[i])->mp_sp = sp;
+
+		enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
 	}
 }
 
@@ -74,18 +82,23 @@ void process_init()
 
 PCB *scheduler(void)
 {
-	if (gp_current_process == NULL) {
-		gp_current_process = gp_pcbs[0];
+	int i;
+	PCB *next_proc = NULL;
+
+	//look for next highest process in ready_queue
+	for (i = 0; i < NUM_PRIORITIES; ++i) {
+		next_proc = dequeue_priority_queue(ready_queue, i);
+		if (next_proc != NULL) {
+			return next_proc;
+		}
+	}
+
+	//return null process if there is nothing in ready queue
+	if (next_proc == NULL) {
 		return gp_pcbs[0];
 	}
 
-	if ( gp_current_process == gp_pcbs[0] ) {
-		return gp_pcbs[1];
-	} else if ( gp_current_process == gp_pcbs[1] ) {
-		return gp_pcbs[0];
-	} else {
-		return NULL;
-	}
+	return next_proc;
 }
 
 /*@brief: switch out old pcb (p_pcb_old), run the new pcb (gp_current_process)
@@ -149,4 +162,10 @@ int k_release_processor(void)
 	}
 	process_switch(p_pcb_old);
 	return RTX_OK;
+}
+
+void null_proc(void) {
+	while (1){
+		k_release_processor();
+	}
 }
