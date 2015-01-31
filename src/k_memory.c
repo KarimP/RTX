@@ -22,7 +22,8 @@ U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
 /**
  * @brief: Start of the linked list of the memory blocks
  */
-mem_blk *start_mem_blk;
+mem_blk start_mem_blk;
+mem_q heap_q;
 
 /**
  * @brief: Start of the heap allocated for memory blocks
@@ -130,16 +131,30 @@ void memory_init(void)
 	}
 	initialize_priority_queue(blocked_queue);
 
-	/* allocate memory for heap*/
-	//initialize memory linked list
-	start_mem_blk = (mem_blk*)p_end;
+	/* allocate memory for heap memory queue*/
+	heap_q = (mem_q)p_end;
+	p_end += sizeof(mem_q);
 
-	while ( (U32*)(start_mem_blk + MEM_BLK_SIZE) <= gp_stack) {
-		start_mem_blk->next_blk = start_mem_blk + MEM_BLK_SIZE;
-		start_mem_blk += MEM_BLK_SIZE;
+	//initialize memory linked list
+	heap_q->first = (mem_blk)p_end;
+
+	while ( (U32*)(heap_q->first + MEM_BLK_SIZE) <= gp_stack) {
+		heap_q->first->next = heap_q->first + MEM_BLK_SIZE;
+		heap_q->first += MEM_BLK_SIZE;
 	}
 
-	start_mem_blk = (mem_blk*)p_end;
+	heap_q->last = heap_q->first;
+	heap_q->first = (mem_blk)p_end;
+
+	//initialize memory linked list
+	// start_mem_blk = (mem_blk)p_end;
+
+	// while ( (U32*)(start_mem_blk + MEM_BLK_SIZE) <= gp_stack) {
+	// 	start_mem_blk->next = start_mem_blk + MEM_BLK_SIZE;
+	// 	start_mem_blk += MEM_BLK_SIZE;
+	// }
+
+	// start_mem_blk = (mem_blk)p_end;
 
 #ifdef DEBUG_0
 	run_PQ_test();
@@ -168,7 +183,7 @@ U32 *alloc_stack(U32 size_b)
 }
 
 void *k_request_memory_block(void) {
-	mem_blk *mem_blk = start_mem_blk;
+	mem_blk blk = dequeue(heap_q);
 
 #ifdef DEBUG_0
 	printf("k_request_memory_block: entering...\n");
@@ -176,7 +191,7 @@ void *k_request_memory_block(void) {
 
 	// atomic ( on ) ;
 
-	while (start_mem_blk == NULL ) {
+	while (blk == NULL ) {
 		//put PCB on blocked_resource_q ;
 		enqueue_priority_queue(blocked_queue, gp_current_process, get_process_priority(gp_current_process->m_pid));
 
@@ -186,20 +201,16 @@ void *k_request_memory_block(void) {
 		k_release_processor();
 	}
 
-	start_mem_blk = start_mem_blk->next_blk; //update the heap
-	mem_blk->next_blk = NULL;
-	mem_blk += (uint32_t)1;
-
 #ifdef DEBUG_0
-	printf("k_request_memory_block: exiting...\n. mem_blk requested is: 0x%x \nActual mem_blk is: 0x%x \nstart_mem_blk is: 0x%x \n", mem_blk, mem_blk - (uint32_t)1, start_mem_blk);
+	printf("k_request_memory_block: exiting...\n. blk requested is: 0x%x \nActual blk is: 0x%x \nstart_mem_blk is: 0x%x \n", blk, blk - (uint32_t)1, start_mem_blk);
 #endif /* ! DEBUG_0 */
 
 	// atomic ( off ) ;
-	return mem_blk;
+	return blk + (uint32_t)1;
 }
 
 int k_release_memory_block(void *p_mem_blk) {
-	mem_blk *rel_blk = (mem_blk *)p_mem_blk - (uint32_t)1;
+	mem_blk rel_blk = (mem_blk)p_mem_blk - (uint32_t)1;
 	int i;
 	PCB *pcb = NULL;
 
@@ -211,7 +222,7 @@ int k_release_memory_block(void *p_mem_blk) {
 		return RTX_ERR;
 	}
 
-	rel_blk->next_blk = start_mem_blk;
+	rel_blk->next = start_mem_blk;
 	start_mem_blk = rel_blk;
 
 	// removed highest priority blocked process that requested memory previously
@@ -225,7 +236,7 @@ int k_release_memory_block(void *p_mem_blk) {
 	}
 
 #ifdef DEBUG_0
-	printf("\nk_release_memory_block: exiting...\nstart_mem_blk is: 0x%x \n start_mem_blk->next_blk is: 0x%x \n", start_mem_blk, start_mem_blk->next_blk);
+	printf("\nk_release_memory_block: exiting...\nstart_mem_blk is: 0x%x \n start_mem_blk->next is: 0x%x \n", start_mem_blk, start_mem_blk->next);
 #endif /* ! DEBUG_0 */
 
 	return RTX_OK;

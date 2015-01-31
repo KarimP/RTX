@@ -11,7 +11,7 @@
 #define K_PROCESS_H_
 
 #include "k_rtx.h"
- #include "k_queue.h"
+ #include "k_process_queue.h"
 
 /* ----- Definitions ----- */
 

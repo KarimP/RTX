@@ -1,5 +1,5 @@
 /**
- * @file:   p_queue.h
+ * @file:   k_queue.h
  * @brief:
  * @date:   2014/01/17
  */
@@ -7,31 +7,20 @@
 #ifndef K_QUEUE_H_
 #define K_QUEUE_H_
 
-#define NUM_PRIORITIES 4
-
-#include "k_rtx.h"
-
-/*
 typedef struct queue_node
 {
-	PCB *proc;  //processor pcb
-	struct queue_node *next;
+    struct queue_node *next;
 } queue_node;
-*/
 
-typedef struct process_queue
+
+typedef struct queue
 {
-	PCB *first;
-	PCB *last;
-} process_queue;
+    queue_node *first;
+    queue_node *last;
+} queue;
 
-extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
-
-void initialize_priority_queue(process_queue**);
-int enqueue_priority_queue(process_queue**, PCB*, int);
-PCB *dequeue_priority_queue(process_queue**, int);
-
-int set_process_priority(int, int);
-int get_process_priority(int);
+void initialize_queue(queue*);
+int enqueue(queue*, queue_node*);
+queue_node *dequeue(queue*);
 
 #endif /* ! K_QUEUE_H_ */
