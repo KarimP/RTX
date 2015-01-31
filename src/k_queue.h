@@ -7,6 +7,8 @@
 #ifndef K_QUEUE_H_
 #define K_QUEUE_H_
 
+#include "k_rtx.h"
+
 typedef struct queue_node
 {
     struct queue_node *next;
