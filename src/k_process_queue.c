@@ -47,7 +47,7 @@ PCB *dequeue_priority_queue(process_queue **p_queue, int priority)
 	return item;
 }
 
-int search_and_change_process_priority(process_queue **queue, int process_id, int prev_priority, int priority)
+PCB *search_and_change_process_priority(process_queue **queue, int process_id, int prev_priority, int priority)
 {
 	PCB *pcb = NULL;
 	PCB *prev_pcb = NULL;
@@ -61,25 +61,43 @@ int search_and_change_process_priority(process_queue **queue, int process_id, in
 			}
 
 			enqueue_priority_queue(queue, pcb, priority);
-			return RTX_OK;
+			return pcb;
 		}
 
 		prev_pcb = pcb;
 	}
 
-	return RTX_ERR;
+	return NULL;
+}
+
+int get_highest_queue_priority(process_queue **queue) {
+	int i;
+	for (i = 0; i < NUM_PRIORITIES; ++i) {
+		if (queue[i]->first != NULL) {
+			return i;
+		}
+	}
+
+	return i;
 }
 
 int set_process_priority(int process_id, int priority)
 {
 	int i;
 	int prev_priority = -1;
+	PCB *proc;
+	int current_process_priority;
+	process_queue **queue = ready_queue;
 
 	if (priority > LOWEST_PRIORITY || priority < HIGHEST_PRIORITY) {
 		return RTX_ERR;
 	}
 
 	for (i = 0; i < NUM_TEST_PROCS; ++i) {
+		if (g_proc_table[i].m_pid == gp_current_process->m_pid) {
+			current_process_priority = g_proc_table[i].m_priority;
+		}
+
 		if (g_proc_table[i].m_pid == process_id) {
 			prev_priority = g_proc_table[i].m_priority;
 			g_proc_table[i].m_priority = priority;
@@ -89,11 +107,27 @@ int set_process_priority(int process_id, int priority)
 	//didn't find process in process table
 	if (prev_priority == -1) {
 		return RTX_ERR;
+	} else if (prev_priority == priority) { //do nothing
+		return RTX_OK;
 	}
 
-	if (search_and_change_process_priority(ready_queue, process_id, prev_priority, priority) == RTX_ERR) {
-		search_and_change_process_priority(blocked_queue, process_id, prev_priority, priority);
+	proc = search_and_change_process_priority(queue, process_id, prev_priority, priority);
+	if (proc == NULL) {
+		queue = blocked_queue;
+		proc = search_and_change_process_priority(queue, process_id, prev_priority, priority);
 	}
+
+	// if (proc == NULL && gp_current_process->m_pid != process_id) {
+	// 	return RTX_ERR;
+	// }
+
+	if (current_process_priority < get_highest_queue_priority(ready_queue)) {
+		k_release_processor();
+	}
+
+	// if ((queue == ready_queue && current_process_priority < priority) || (gp_current_process->m_pid == process_id && priority < get_highest_queue_priority(ready_queue)) ) {
+	// 	k_release_processor();
+	// }
 
 	return RTX_OK;
 

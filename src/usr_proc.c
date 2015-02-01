@@ -22,9 +22,11 @@ void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_test_procs[i].m_pid=(U32)(i+1);
-		g_test_procs[i].m_priority=LOWEST;
+		g_test_procs[i].m_priority=LOW;
 		g_test_procs[i].m_stack_size=0x100;
 	}
+
+	g_test_procs[3].m_priority = LOWEST;
 
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
 	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
@@ -165,9 +167,24 @@ void proc3(void)
 
 /**
 tests:
+	MEMORY
 	-allocate all blocks
 	-deallocate all blocks
 	-allocate all blocks + 1
-	-deallocate null, < p_end, > gp_stack, mid block
-	-deallocate block that has not been allocated
+		-ensure process gets blocked
+		-last allocated kept in a global variable, another process releases that block
+	-deallocate null, < p_end, > gp_stack, mid block - DONE
+	-deallocate block that has not been allocated - DONE
+
+	SCHEDULAR
+	-set current process priority to higher when highest
+	-set current process priority to lower but still highest
+	-set current process priority to lower than next-highest
+	-set non-current process priority to higher than current
+	-set non-current process priority higher but lower than current
+	-set non-current process priority lower than current
+	-block all processes to ensure null is running
+	-block all user processes but one <- unblocked one will get called multiple times back to back
+
+	**investigate SVC interrupts
 */

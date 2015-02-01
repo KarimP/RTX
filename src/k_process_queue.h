@@ -10,6 +10,7 @@
 #define NUM_PRIORITIES 4
 
 #include "k_rtx.h"
+// #include "k_process.h"
 
 /*
 typedef struct queue_node
@@ -33,5 +34,7 @@ PCB *dequeue_priority_queue(process_queue**, int);
 
 int set_process_priority(int, int);
 int get_process_priority(int);
+
+extern PCB *gp_current_process;
 
 #endif /* ! K_PROCESS_QUEUE_H_ */

@@ -4,7 +4,7 @@
  * @author: Yiqing Huang
  * @date:   2014/01/17
  */
- 
+
 #ifndef K_MEM_H_
 #define K_MEM_H_
 
@@ -21,8 +21,8 @@ typedef queue* mem_q;
 typedef queue_node* mem_blk;
 
 /* ----- Variables ----- */
-/* This symbol is defined in the scatter file (see RVCT Linker User Guide) */  
-extern unsigned int Image$$RW_IRAM1$$ZI$$Limit; 
+/* This symbol is defined in the scatter file (see RVCT Linker User Guide) */
+extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;
 extern PCB **gp_pcbs;
 extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
 extern PCB *gp_current_process;
