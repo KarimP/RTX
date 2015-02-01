@@ -16,15 +16,6 @@
 /* ----- Definitions ----- */
 #define RAM_END_ADDR 0x10008000
 
-// typedef struct mem_blk {
-//     struct mem_blk *next_blk ;
-// } mem_blk;
-
-// typedef struct mem_q {
-//     mem_blk *first;
-//     mem_blk *last;
-// } mem_q;
-
 typedef queue* mem_q;
 typedef queue_node* mem_blk;
 
@@ -32,7 +23,7 @@ typedef queue_node* mem_blk;
 /* This symbol is defined in the scatter file (see RVCT Linker User Guide) */
 extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;
 extern PCB **gp_pcbs;
-extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
+extern PROC_INIT g_proc_table[NUM_TEST_PROCS+1];
 extern PCB *gp_current_process;
 
 extern process_queue **ready_queue;

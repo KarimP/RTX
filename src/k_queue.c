@@ -8,6 +8,11 @@ void initialize_queue(queue *q)
 
 int enqueue(queue *q, queue_node *node)
 {
+    //node is already in queue - return error
+    if (node == NULL || node->next != NULL || node == q->last) {
+        return RTX_ERR;
+    }
+
     if (q->first == NULL) {
         q->first = node;
     } else {
@@ -34,6 +39,8 @@ queue_node *dequeue(queue *q)
     if (q->first == NULL) {
         q->last = NULL;
     }
+
+    node->next = NULL;
 
     return node;
 }

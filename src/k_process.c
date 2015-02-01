@@ -27,7 +27,7 @@ PCB **gp_pcbs;                  /* array of pcbs */
 PCB *gp_current_process = NULL; /* always point to the current RUN process */
 
 /* process initialization table */
-PROC_INIT g_proc_table[NUM_TEST_PROCS];
+PROC_INIT g_proc_table[NUM_TEST_PROCS+1];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
 /**
@@ -39,23 +39,27 @@ void process_init()
 	int i;
 	U32 *sp;
 
-	//add null process to proc init table
-	g_proc_table[0].m_pid = 0;
-	g_proc_table[0].m_stack_size = 0x100;
-	g_proc_table[0].mpf_start_pc = &null_proc;
-	g_proc_table[0].m_priority = LOWEST_PRIORITY + 1;
-
     /* fill out the initialization table */
 	set_test_procs();
-	for ( i = 1; i <= NUM_TEST_PROCS; ++i ) {
-		g_proc_table[i].m_pid = g_test_procs[i-1].m_pid;
-		g_proc_table[i].m_stack_size = g_test_procs[i-1].m_stack_size;
-		g_proc_table[i].mpf_start_pc = g_test_procs[i-1].mpf_start_pc;
-		g_proc_table[i].m_priority = g_test_procs[i-1].m_priority;
+	for ( i = 0; i < NUM_TEST_PROCS; ++i ) {
+		g_proc_table[i].m_pid = g_test_procs[i].m_pid;
+		g_proc_table[i].m_stack_size = g_test_procs[i].m_stack_size;
+		g_proc_table[i].mpf_start_pc = g_test_procs[i].mpf_start_pc;
+		if (g_test_procs[i].m_priority > LOWEST_PRIORITY || g_test_procs[i].m_priority < HIGHEST_PRIORITY) {
+			g_test_procs[i].m_priority = LOWEST_PRIORITY;
+			printf("fkajfgldhsfgdehfdg");
+		}
+		g_proc_table[i].m_priority = g_test_procs[i].m_priority;
 	}
 
+	//add null process to proc init table
+	g_proc_table[NUM_TEST_PROCS].m_pid = 0;
+	g_proc_table[NUM_TEST_PROCS].m_stack_size = USR_SZ_STACK;
+	g_proc_table[NUM_TEST_PROCS].mpf_start_pc = &null_proc;
+	g_proc_table[NUM_TEST_PROCS].m_priority = LOWEST_PRIORITY + 1;
+
 	/* initilize exception stack frame (i.e. initial context) for each process */
-	for ( i = 0; i < NUM_TEST_PROCS; ++i ) {
+	for ( i = 0; i <= NUM_TEST_PROCS; ++i ) {
 		int j;
 		(gp_pcbs[i])->m_pid = (g_proc_table[i]).m_pid;
 		(gp_pcbs[i])->m_state = NEW;
@@ -86,16 +90,11 @@ PCB *scheduler(void)
 	PCB *next_proc = NULL;
 
 	//look for next highest process in ready_queue
-	for (i = 0; i < NUM_PRIORITIES; ++i) {
+	for (i = 0; i <= NUM_PRIORITIES; ++i) {
 		next_proc = dequeue_priority_queue(ready_queue, i);
 		if (next_proc != NULL) {
 			return next_proc;
 		}
-	}
-
-	//return null process if there is nothing in ready queue
-	if (next_proc == NULL) {
-		return gp_pcbs[0];
 	}
 
 	return next_proc;
@@ -134,6 +133,8 @@ int process_switch(PCB *p_pcb_old)
 			gp_current_process->m_state = RUN;
 			__set_MSP((U32) gp_current_process->mp_sp); //switch to the new proc's stack
 		} else {
+			//***************BUG********************
+			//queues need some management here
 			gp_current_process = p_pcb_old; // revert back to the old proc on error
 			return RTX_ERR;
 		}
@@ -159,7 +160,10 @@ int k_release_processor(void)
 
 	if ( p_pcb_old == NULL ) {
 		p_pcb_old = gp_current_process;
+	} else {
+		enqueue_priority_queue(ready_queue, p_pcb_old, get_process_priority(p_pcb_old->m_pid));
 	}
+
 	process_switch(p_pcb_old);
 	return RTX_OK;
 }

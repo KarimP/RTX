@@ -6,7 +6,7 @@ process_queue **blocked_queue;
 void initialize_priority_queue(process_queue **priority_queue)
 {
 	int i;
-	for (i = 0; i < NUM_PRIORITIES; ++i) {
+	for (i = 0; i <= NUM_PRIORITIES; ++i) {
 		priority_queue[i]->first = NULL;
 		priority_queue[i]->last = NULL;
 	}
@@ -14,7 +14,7 @@ void initialize_priority_queue(process_queue **priority_queue)
 
 int enqueue_priority_queue(process_queue **p_queue, PCB *item, int priority)
 {
-	if ((priority >= NUM_PRIORITIES) || (item == NULL)) {
+	if ((priority > NUM_PRIORITIES) || (item == NULL)) {
 		return RTX_ERR;
 	}
 

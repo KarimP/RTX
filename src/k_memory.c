@@ -92,16 +92,20 @@ void memory_init(void)
 
 	/* allocate memory for pcb pointers   */
 	gp_pcbs = (PCB **)p_end;
-	p_end += NUM_TEST_PROCS * sizeof(PCB *);
+	p_end += (NUM_TEST_PROCS + 1) * sizeof(PCB *);
 
 	//allocate PCBs
-	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
+	for ( i = 0; i <= NUM_TEST_PROCS; i++ ) {
 		gp_pcbs[i] = (PCB *)p_end;
 		p_end += sizeof(PCB);
 	}
+
 #ifdef DEBUG_0
 	printf("gp_pcbs[0] = 0x%x \n", gp_pcbs[0]);
 	printf("gp_pcbs[1] = 0x%x \n", gp_pcbs[1]);
+	printf("gp_pcbs[2] = 0x%x \n", gp_pcbs[2]);
+	printf("gp_pcbs[3] = 0x%x \n", gp_pcbs[3]);
+	printf("gp_pcbs[4] = 0x%x \n", gp_pcbs[4]);
 #endif
 
 	/* prepare for alloc_stack() to allocate memory for stacks */
@@ -113,12 +117,13 @@ void memory_init(void)
 
 	//allocate memory for ready queue
 	ready_queue = (process_queue**)p_end;
-	p_end += NUM_PRIORITIES * sizeof(process_queue *);
+	p_end += (NUM_PRIORITIES + 1) * sizeof(process_queue *);
 
 	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
 		ready_queue[i] = (process_queue *)p_end;
-		p_end += sizeof(process_queue)*NUM_TEST_PROCS;
+		p_end += sizeof(process_queue)*(NUM_TEST_PROCS);
 	}
+	p_end += sizeof(process_queue); //4th level in queue only has ptr for 1 proc (null proc)
 	initialize_priority_queue(ready_queue);
 
 	//allocate memory for blocked queue
@@ -127,7 +132,7 @@ void memory_init(void)
 
 	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
 		blocked_queue[i] = (process_queue *)p_end;
-		p_end += sizeof(process_queue)*NUM_TEST_PROCS;
+		p_end += sizeof(process_queue)*(NUM_TEST_PROCS);
 	}
 	initialize_priority_queue(blocked_queue);
 
@@ -146,18 +151,8 @@ void memory_init(void)
 	heap_q->last = heap_q->first;
 	heap_q->first = (mem_blk)p_end;
 
-	//initialize memory linked list
-	// start_mem_blk = (mem_blk)p_end;
-
-	// while ( (U32*)(start_mem_blk + MEM_BLK_SIZE) <= gp_stack) {
-	// 	start_mem_blk->next = start_mem_blk + MEM_BLK_SIZE;
-	// 	start_mem_blk += MEM_BLK_SIZE;
-	// }
-
-	// start_mem_blk = (mem_blk)p_end;
-
 #ifdef DEBUG_0
-	run_PQ_test();
+	// run_PQ_test();
 #endif
 }
 
@@ -222,8 +217,9 @@ int k_release_memory_block(void *p_mem_blk) {
 		return RTX_ERR;
 	}
 
-	rel_blk->next = start_mem_blk;
-	start_mem_blk = rel_blk;
+	if (enqueue(heap_q, rel_blk) != RTX_OK) {
+		return RTX_ERR;
+	}
 
 	// removed highest priority blocked process that requested memory previously
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
@@ -242,11 +238,3 @@ int k_release_memory_block(void *p_mem_blk) {
 	return RTX_OK;
 }
 
-/**
-tests:
-	-allocate all blocks
-	-deallocate all blocks
-	-allocate all blocks + 1
-	-deallocate null, < p_end, > gp_stack, mid block
-	-deallocate block that has not been allocated - only bug (for now...hopefully)
-*/
