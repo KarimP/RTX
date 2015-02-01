@@ -111,8 +111,6 @@ void memory_init(void)
 		p_end += sizeof(process_queue)*(NUM_TEST_PROCS);
 	}
 	initialize_priority_queue(blocked_queue);
-  
-	printf("gpstack b= 0x%x \n", gp_stack);
 
 #ifdef DEBUG_0
 	// run_PQ_test();
@@ -124,6 +122,8 @@ int setup_heap(void)
 {
 	mem_blk blk;
 	
+	printf("gpstack b= 0x%x \n", gp_stack);
+	
   // allocate memory for heap memory queue
 	heap_q = (mem_q)p_end;
 	p_end += sizeof(queue);//sizeof(mem_q) + sizeof(queue);
@@ -131,7 +131,7 @@ int setup_heap(void)
 	//initialize memory linked list
 	blk = (mem_blk)p_end;
 	
-	while ( (U32*)heap_q->last < gp_stack) {
+	while ( (U32*)heap_q->last + MEM_BLK_SIZE < gp_stack) {
 		enqueue(heap_q, blk);
 		blk += MEM_BLK_SIZE;
 	}
