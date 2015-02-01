@@ -456,11 +456,6 @@
               <FileType>1</FileType>
               <FilePath>.\src\k_process_queue.c</FilePath>
             </File>
-            <File>
-              <FileName>k_process_queue.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\src\k_process_queue.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
