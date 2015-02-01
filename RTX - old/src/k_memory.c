@@ -17,11 +17,12 @@
 /* ----- Global Variables ----- */
 U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
                /* The first stack starts at the RAM high address */
-	       /* stack grows down. Fully decremental stack */
-				 
+				/* stack grows down. Fully decremental stack */
+
 /**
  * @brief: Start of the linked list of the memory blocks
  */
+mem_blk start_mem_blk;
 mem_q heap_q;
 
 /**
@@ -31,7 +32,6 @@ U8 *p_end;
 
 /**
  * @brief: Initialize RAM as follows:
-
 0x10008000+---------------------------+ High Address
           |    Proc 1 STACK           |
           |---------------------------|
@@ -40,7 +40,7 @@ U8 *p_end;
           |                           |
           |        HEAP               |
           |                           |
-          |---------------------------|
+          |---------------------------|<--- p_end
           |        PCB 2              |
           |---------------------------|
           |        PCB 1              |
@@ -48,49 +48,71 @@ U8 *p_end;
           |        PCB pointers       |
           |---------------------------|<--- gp_pcbs
           |        Padding            |
-          |---------------------------|  
+          |---------------------------|
           |Image$$RW_IRAM1$$ZI$$Limit |
-          |...........................|          
+          |...........................|
           |       RTX  Image          |
           |                           |
 0x10000000+---------------------------+ Low Address
-
 */
+
+void run_PQ_test()
+{
+	printf("p_end: 0x%x \n", p_end);
+	enqueue_priority_queue(ready_queue, gp_pcbs[0], 1);
+
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+	printf("ready_queue[1]->last = 0x%x \n", ready_queue[1]->last);
+
+	enqueue_priority_queue(ready_queue, gp_pcbs[1], 1);
+	printf("ready_queue[1]->last = 0x%x \n", ready_queue[1]->last);
+
+	enqueue_priority_queue(ready_queue, gp_pcbs[2], 1);
+	printf("ready_queue[1]->last = 0x%x \n", ready_queue[1]->last);
+
+	dequeue_priority_queue(ready_queue, 1);
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+
+	dequeue_priority_queue(ready_queue, 1);
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+
+	dequeue_priority_queue(ready_queue, 1);
+	printf("ready_queue[1]->first = 0x%x \n", ready_queue[1]->first);
+}
 
 void memory_init(void)
 {
 	int i;
+
 	p_end = (U8 *)&Image$$RW_IRAM1$$ZI$$Limit;
-	printf("pend = 0x%x \n", p_end);
-  
+
 	/* 4 bytes padding */
 	p_end += 4;
 
 	/* allocate memory for pcb pointers   */
 	gp_pcbs = (PCB **)p_end;
-	p_end += NUM_TEST_PROCS * sizeof(PCB *);
-  
-	//allocate for PCBs
+	p_end += (NUM_TEST_PROCS) * sizeof(PCB *);
+
+	//allocate PCBs
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		gp_pcbs[i] = (PCB *)p_end;
-		p_end += sizeof(PCB); 
+		p_end += sizeof(PCB);
 	}
-#ifdef DEBUG_0  
+
+#ifdef DEBUG_0
 	printf("gp_pcbs[0] = 0x%x \n", gp_pcbs[0]);
 	printf("gp_pcbs[1] = 0x%x \n", gp_pcbs[1]);
 	printf("gp_pcbs[2] = 0x%x \n", gp_pcbs[2]);
 	printf("gp_pcbs[3] = 0x%x \n", gp_pcbs[3]);
 #endif
-	
+
 	/* prepare for alloc_stack() to allocate memory for stacks */
-	
+
 	gp_stack = (U32 *)RAM_END_ADDR;
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
-		--gp_stack; 
+		--gp_stack;
 	}
-	
-	printf("gpstack a= 0x%x \n", gp_stack);
-	
+
 	//allocate memory for ready queue
 	ready_queue = (process_queue**)p_end;
 	p_end += (NUM_PRIORITIES) * sizeof(process_queue *);
@@ -111,39 +133,25 @@ void memory_init(void)
 		p_end += sizeof(process_queue)*(NUM_TEST_PROCS);
 	}
 	initialize_priority_queue(blocked_queue);
-  
-	printf("gpstack b= 0x%x \n", gp_stack);
+
+	/* allocate memory for heap memory queue*/
+	heap_q = (mem_q)p_end;
+	p_end += sizeof(mem_q);
+
+	//initialize memory linked list
+	heap_q->first = (mem_blk)p_end;
+
+	while ( (U32*)(heap_q->first + MEM_BLK_SIZE) <= gp_stack) {
+		heap_q->first->next = heap_q->first + MEM_BLK_SIZE;
+		heap_q->first += MEM_BLK_SIZE;
+	}
+
+	heap_q->last = heap_q->first;
+	heap_q->first = (mem_blk)p_end;
 
 #ifdef DEBUG_0
 	// run_PQ_test();
 #endif
-  
-}
-
-int setup_heap(void)
-{
-	mem_blk blk;
-	
-  // allocate memory for heap memory queue
-	heap_q = (mem_q)p_end;
-	p_end += sizeof(queue);//sizeof(mem_q) + sizeof(queue);
-
-	//initialize memory linked list
-	blk = (mem_blk)p_end;
-	
-	while ( (U32*)heap_q->last < gp_stack) {
-		enqueue(heap_q, blk);
-		blk += MEM_BLK_SIZE;
-	}
-	
-	printf("heap_q->first= 0x%x \n", heap_q->first);
-	printf("heap_q->last= 0x%x \n", heap_q->last);
-	
-	if (heap_q->first == (mem_blk)p_end){
-		return RTX_OK;
-	} else {
-		return RTX_ERR;
-	}	
 }
 
 /**
@@ -152,27 +160,22 @@ int setup_heap(void)
  * @return: The top of the stack (i.e. high address)
  * POST:  gp_stack is updated.
  */
-
-U32 *alloc_stack(U32 size_b) 
+U32 *alloc_stack(U32 size_b)
 {
 	U32 *sp;
 	sp = gp_stack; /* gp_stack is always 8 bytes aligned */
-	
+
 	/* update gp_stack */
 	gp_stack = (U32 *)((U8 *)sp - size_b);
-	
+
 	/* 8 bytes alignement adjustment to exception stack frame */
 	if ((U32)gp_stack & 0x04) {
-		--gp_stack; 
+		--gp_stack;
 	}
-	
-	printf("gpstack c= 0x%x \n", gp_stack);
-	
 	return sp;
 }
 
-void *k_request_memory_block(void) 
-{
+void *k_request_memory_block(void) {
 	mem_blk blk = dequeue(heap_q);
 
 #ifdef DEBUG_0
@@ -192,16 +195,15 @@ void *k_request_memory_block(void)
 	}
 
 #ifdef DEBUG_0
-	printf("k_request_memory_block: exiting...\n. blk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n", blk, blk - sizeof(mem_blk), heap_q->first);
+	printf("k_request_memory_block: exiting...\n. blk requested is: 0x%x \nActual blk is: 0x%x \nstart_mem_blk is: 0x%x \n", blk, blk - (uint32_t)1, start_mem_blk);
 #endif /* ! DEBUG_0 */
 
 	// atomic ( off ) ;
-	return blk + sizeof(mem_blk);
+	return blk + (uint32_t)1;
 }
 
-int k_release_memory_block(void *p_mem_blk) 
-{
-	mem_blk rel_blk = (mem_blk)p_mem_blk - sizeof(mem_blk);
+int k_release_memory_block(void *p_mem_blk) {
+	mem_blk rel_blk = (mem_blk)p_mem_blk - (uint32_t)1;
 	int i;
 	PCB *pcb = NULL;
 
@@ -228,8 +230,9 @@ int k_release_memory_block(void *p_mem_blk)
 	}
 
 #ifdef DEBUG_0
-	printf("\nk_release_memory_block: exiting...\nheap_q->first is: 0x%x \n heap_q->first->next is: 0x%x \n", heap_q->first, heap_q->first->next);
+	printf("\nk_release_memory_block: exiting...\nstart_mem_blk is: 0x%x \n start_mem_blk->next is: 0x%x \n", start_mem_blk, start_mem_blk->next);
 #endif /* ! DEBUG_0 */
 
 	return RTX_OK;
 }
+

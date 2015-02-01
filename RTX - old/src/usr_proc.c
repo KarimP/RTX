@@ -92,7 +92,6 @@ void proc2(void)
 void proc4(void)
 {
 	while (1) {
-		printf("proc4: ret \n");
 		release_processor();
 	}
 }
@@ -102,65 +101,78 @@ void proc4(void)
  */
 void proc3(void)
 {
-	//allocate some blocks of memory
- 	void *mem_blks[10];
- 	int num_blks = 10;
- 	int passed = 1;
+	int i = 0;
+	int ret_val = 20;
+	while ( 1) {
+		if ( i != 0 && i%5 == 0 ) {
+			uart0_put_string("\n\r");
+			ret_val = release_processor();
+#ifdef DEBUG_0
+			printf("proc2: ret_val=%d\n", ret_val);
+#endif /* DEBUG_0 */
+		}
+		uart0_put_char('0' + i%10);
+		i++;
+	}
+// 	//allocate some blocks of memory
+// 	void *mem_blks[10];
+// 	int num_blks = 10;
+// 	int passed = 1;
 
- 	while (num_blks > 0) {
- 		num_blks--;
- 		mem_blks[num_blks] = request_memory_block();
- 	}
+// 	while (num_blks > 0) {
+// 		num_blks--;
+// 		mem_blks[num_blks] = request_memory_block();
+// 	}
 
- 	//deallocate all blocks but 1
- 	num_blks = 10;
- 	while (num_blks > 1) {
- 		num_blks--;
- 		if (release_memory_block(mem_blks[num_blks]) == RTX_ERR) {
- 			passed = 0;
- 		}
- 	}
+// 	//deallocate all blocks but 1
+// 	num_blks = 9;
+// 	while (num_blks > 0) {
+// 		num_blks--;
+// 		if (release_memory_block(mem_blks[num_blks]) == RTX_ERR) {
+// 			passed = 0;
+// 		}
+// 	}
 
- 	//deallocate block that has not been allocated
- 	if (release_memory_block(mem_blks[1]) != RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate block that has not been allocated
+// 	if (release_memory_block(mem_blks[1]) != RTX_ERR) {
+// 		passed = 0;
+// 	}
 
- 	//deallocate null block
- 	if (release_memory_block(NULL) != RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate null block
+// 	if (release_memory_block(NULL) != RTX_ERR) {
+// 		passed = 0;
+// 	}
 
- 	//deallocate address greater than the heap
- 	if (release_memory_block((void *)0x10008000) != RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate address greater than the heap
+// 	if (release_memory_block((void *)0x10008000) != RTX_ERR) {
+// 		passed = 0;
+// 	}
 
- 	//deallocate address less than the heap
- 	if (release_memory_block((void *)0x10000000) != RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate address less than the heap
+// 	if (release_memory_block((void *)0x10000000) != RTX_ERR) {
+// 		passed = 0;
+// 	}
 
- 	//deallocate address that is the end of a memory block
- 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)1) != RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate address that is the end of a memory block
+// 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)1) != RTX_ERR) {
+// 		passed = 0;
+// 	}
 
-	//deallocate address that is the middle of a memory block
- 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)3) != RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate address that is the middle of a memory block
+// 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)3) != RTX_ERR) {
+// 		passed = 0;
+// 	}
 
- 	//deallocate the last held memory block
- 	if (release_memory_block(mem_blks[0]) == RTX_ERR) {
- 		passed = 0;
- 	}
+// 	//deallocate the last held memory block
+// 	if (release_memory_block(mem_blks[0]) == RTX_ERR) {
+// 		passed = 0;
+// 	}
 
- #ifdef DEBUG_0
- 	printf("testing memory blocks...%s \n", passed ? "passed" : "failed");
- #endif /* DEBUG_0 */
+// #ifdef DEBUG_0
+// 	printf("testing memory blocks...%s \n", passed ? "passed" : "failed");
+// #endif /* DEBUG_0 */
 
- 	release_processor();
+// 	release_processor();
 }
 
 /**

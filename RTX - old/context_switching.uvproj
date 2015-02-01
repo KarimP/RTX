@@ -297,7 +297,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x80000</Size>
+                <Size>0x4000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -447,11 +447,6 @@
               <FilePath>.\src\k_process.c</FilePath>
             </File>
             <File>
-              <FileName>k_queue.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\k_queue.c</FilePath>
-            </File>
-            <File>
               <FileName>k_process_queue.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\k_process_queue.c</FilePath>
@@ -460,6 +455,16 @@
               <FileName>k_process_queue.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\src\k_process_queue.h</FilePath>
+            </File>
+            <File>
+              <FileName>k_queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\k_queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>k_queue.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\src\k_queue.h</FilePath>
             </File>
           </Files>
         </Group>

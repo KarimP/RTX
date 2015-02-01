@@ -7,6 +7,8 @@
 
 /* ----- Definitations ----- */
 #define RTX_ERR -1
+#define RTX_OK 0
+
 #define NULL 0
 #define NUM_TEST_PROCS 4
 /* Process Priority. The bigger the number is, the lower the priority is*/
@@ -20,11 +22,13 @@ typedef unsigned int U32;
 
 /* initialization table item */
 typedef struct proc_init
-{	
-	int m_pid;	        /* process id */ 
-	int m_priority;         /* initial priority, not used in this example. */ 
+{
+	int m_pid;	        /* process id */
+	int m_priority;         /* initial priority, not used in this example. */
 	int m_stack_size;       /* size of stack in words */
-	void (*mpf_start_pc) ();/* entry point of the process */    
+	struct pcb *mp_next;
+
+	void (*mpf_start_pc) ();/* entry point of the process */
 } PROC_INIT;
 
 /* ----- RTX User API ----- */

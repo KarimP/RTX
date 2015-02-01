@@ -1,0 +1,14 @@
+*.o
+*.d
+*.crf
+*.bak
+*.lst
+*.uvgui.*
+*.axf
+*.lnp
+*.map
+*.plg
+*.sct
+*.dep
+*.tra
+context_switching.htm
