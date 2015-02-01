@@ -14,7 +14,7 @@ void initialize_priority_queue(process_queue **priority_queue)
 
 int enqueue_priority_queue(process_queue **p_queue, PCB *item, int priority)
 {
-	if ((priority > NUM_PRIORITIES) || (item == NULL)) {
+	if ((priority > LOWEST_PRIORITY) || (priority < HIGHEST_PRIORITY) || (item == NULL)) {
 		return RTX_ERR;
 	}
 

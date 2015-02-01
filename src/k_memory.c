@@ -18,7 +18,7 @@
 U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
                /* The first stack starts at the RAM high address */
 	       /* stack grows down. Fully decremental stack */
-				 
+
 /**
  * @brief: Start of the linked list of the memory blocks
  */
@@ -48,9 +48,9 @@ U8 *p_end;
           |        PCB pointers       |
           |---------------------------|<--- gp_pcbs
           |        Padding            |
-          |---------------------------|  
+          |---------------------------|
           |Image$$RW_IRAM1$$ZI$$Limit |
-          |...........................|          
+          |...........................|
           |       RTX  Image          |
           |                           |
 0x10000000+---------------------------+ Low Address
@@ -62,35 +62,35 @@ void memory_init(void)
 	int i;
 	p_end = (U8 *)&Image$$RW_IRAM1$$ZI$$Limit;
 	printf("pend = 0x%x \n", p_end);
-  
+
 	/* 4 bytes padding */
 	p_end += 4;
 
 	/* allocate memory for pcb pointers   */
 	gp_pcbs = (PCB **)p_end;
 	p_end += NUM_TEST_PROCS * sizeof(PCB *);
-  
+
 	//allocate for PCBs
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		gp_pcbs[i] = (PCB *)p_end;
-		p_end += sizeof(PCB); 
+		p_end += sizeof(PCB);
 	}
-#ifdef DEBUG_0  
+#ifdef DEBUG_0
 	printf("gp_pcbs[0] = 0x%x \n", gp_pcbs[0]);
 	printf("gp_pcbs[1] = 0x%x \n", gp_pcbs[1]);
 	printf("gp_pcbs[2] = 0x%x \n", gp_pcbs[2]);
 	printf("gp_pcbs[3] = 0x%x \n", gp_pcbs[3]);
 #endif
-	
+
 	/* prepare for alloc_stack() to allocate memory for stacks */
-	
+
 	gp_stack = (U32 *)RAM_END_ADDR;
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
-		--gp_stack; 
+		--gp_stack;
 	}
-	
-	printf("gpstack a= 0x%x \n", gp_stack);
-	
+
+	// printf("gpstack a= 0x%x \n", gp_stack);
+
 	//allocate memory for ready queue
 	ready_queue = (process_queue**)p_end;
 	p_end += (NUM_PRIORITIES) * sizeof(process_queue *);
@@ -115,35 +115,35 @@ void memory_init(void)
 #ifdef DEBUG_0
 	// run_PQ_test();
 #endif
-  
+
 }
 
 int setup_heap(void)
 {
 	mem_blk blk;
-	
-	printf("gpstack b= 0x%x \n", gp_stack);
-	
+
+	// printf("gpstack b= 0x%x \n", gp_stack);
+
   // allocate memory for heap memory queue
 	heap_q = (mem_q)p_end;
 	p_end += sizeof(queue);//sizeof(mem_q) + sizeof(queue);
 
 	//initialize memory linked list
 	blk = (mem_blk)p_end;
-	
+
 	while ( (U32*)heap_q->last + MEM_BLK_SIZE < gp_stack) {
 		enqueue(heap_q, blk);
 		blk += MEM_BLK_SIZE;
 	}
-	
+
 	printf("heap_q->first= 0x%x \n", heap_q->first);
 	printf("heap_q->last= 0x%x \n", heap_q->last);
-	
+
 	if (heap_q->first == (mem_blk)p_end){
 		return RTX_OK;
 	} else {
 		return RTX_ERR;
-	}	
+	}
 }
 
 /**
@@ -153,25 +153,25 @@ int setup_heap(void)
  * POST:  gp_stack is updated.
  */
 
-U32 *alloc_stack(U32 size_b) 
+U32 *alloc_stack(U32 size_b)
 {
 	U32 *sp;
 	sp = gp_stack; /* gp_stack is always 8 bytes aligned */
-	
+
 	/* update gp_stack */
 	gp_stack = (U32 *)((U8 *)sp - size_b);
-	
+
 	/* 8 bytes alignement adjustment to exception stack frame */
 	if ((U32)gp_stack & 0x04) {
-		--gp_stack; 
+		--gp_stack;
 	}
-	
-	printf("gpstack c= 0x%x \n", gp_stack);
-	
+
+	// printf("gpstack c= 0x%x \n", gp_stack);
+
 	return sp;
 }
 
-void *k_request_memory_block(void) 
+void *k_request_memory_block(void)
 {
 	mem_blk blk = dequeue(heap_q);
 
@@ -199,7 +199,7 @@ void *k_request_memory_block(void)
 	return blk + sizeof(mem_blk);
 }
 
-int k_release_memory_block(void *p_mem_blk) 
+int k_release_memory_block(void *p_mem_blk)
 {
 	mem_blk rel_blk = (mem_blk)p_mem_blk - sizeof(mem_blk);
 	int i;
