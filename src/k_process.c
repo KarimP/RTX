@@ -41,13 +41,23 @@ void process_init()
 
     /* fill out the initialization table */
 	set_test_procs();
-	for ( i = 0; i < NUM_TEST_PROCS; ++i ) {
+		printf("gp_pcbs[0] = 0x%x \n", g_test_procs[0].m_priority);
+	printf("gp_pcbs[0] = 0x%x \n", g_test_procs[1].m_priority);
+	printf("gp_pcbs[0] = 0x%x \n", g_test_procs[2].m_priority);
+	printf("gp_pcbs[0] = 0x%x \n", g_test_procs[3].m_priority);
+	printf("gp_pcbs[0] = 0x%x \n", g_test_procs[4].m_priority);
+	for ( i = 0; i <= NUM_TEST_PROCS; ++i ) {
 		g_proc_table[i].m_pid = g_test_procs[i].m_pid;
 		g_proc_table[i].m_stack_size = g_test_procs[i].m_stack_size;
 		g_proc_table[i].mpf_start_pc = g_test_procs[i].mpf_start_pc;
+		
+		//printf((char *)g_test_procs[i].m_priority);
+		//printf((char *)LOWEST_PRIORITY);
+		//printf((char *)HIGHEST_PRIORITY);
+		printf("gp_pcbs[0] = 0x%x \n", g_test_procs[i].m_priority);
 		if (g_test_procs[i].m_priority > LOWEST_PRIORITY || g_test_procs[i].m_priority < HIGHEST_PRIORITY) {
 			g_test_procs[i].m_priority = LOWEST_PRIORITY;
-			printf("fkajfgldhsfgdehfdg");
+			printf("gp_pcbs[0] = 0x%x \n", g_test_procs[i].m_priority);
 		}
 		g_proc_table[i].m_priority = g_test_procs[i].m_priority;
 	}

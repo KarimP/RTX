@@ -14,7 +14,7 @@
 #define RTX_OK  0
 
 #define NULL 0
-#define NUM_TEST_PROCS 4
+#define NUM_TEST_PROCS 5
 #define LOWEST_PRIORITY 3
 #define HIGHEST_PRIORITY 0
 
