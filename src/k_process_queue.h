@@ -31,6 +31,7 @@ extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
 void initialize_priority_queue(process_queue**);
 int enqueue_priority_queue(process_queue**, PCB*, int);
 PCB *dequeue_priority_queue(process_queue**, int);
+PCB *pop_queue(process_queue**, int, int);
 
 int k_set_process_priority(int, int);
 int k_get_process_priority(int);

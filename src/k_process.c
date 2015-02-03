@@ -102,23 +102,40 @@ void process_init()
 PCB *scheduler(void)
 {
 	int i;
-	PCB *next_proc = NULL;
+	PCB *next_proc = gp_current_process;
 
 	//look for next highest process in ready_queue
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
-		next_proc = dequeue_priority_queue(ready_queue, i);
-		if (next_proc != NULL) {
-
-			#ifdef DEBUG_1
-			printf("\nprocess id: %d is next \n", next_proc->m_pid);
-			#endif /* DEBUG_1 */
-
+		if (ready_queue[i]->first != NULL) {
+			next_proc = dequeue_priority_queue(ready_queue, i);
+			enqueue_priority_queue(ready_queue, next_proc, i);
 			return next_proc;
 		}
 	}
 
 	return next_proc;
 }
+
+// PCB *scheduler(void)
+// {
+// 	int i;
+// 	PCB *next_proc = NULL;
+
+// 	//look for next highest process in ready_queue
+// 	for (i = 0; i < NUM_PRIORITIES; ++i) {
+// 		next_proc = dequeue_priority_queue(ready_queue, i);
+// 		if (next_proc != NULL) {
+
+// 			#ifdef DEBUG_1
+// 			printf("\nprocess id: %d is next \n", next_proc->m_pid);
+// 			#endif /* DEBUG_1 */
+
+// 			return next_proc;
+// 		}
+// 	}
+
+// 	return next_proc;
+// }
 
 /*@brief: switch out old pcb (p_pcb_old), run the new pcb (gp_current_process)
  *@param: p_pcb_old, the old pcb that was in RUN
@@ -136,7 +153,10 @@ int process_switch(PCB *p_pcb_old)
 
 	if (state == NEW) {
 		if (gp_current_process != p_pcb_old && p_pcb_old->m_state != NEW) {
-			p_pcb_old->m_state = RDY;
+			if (p_pcb_old->m_state == RUN) {
+				p_pcb_old->m_state = RDY;
+			}
+
 			p_pcb_old->mp_sp = (U32 *) __get_MSP();
 		}
 		gp_current_process->m_state = RUN;
@@ -147,7 +167,10 @@ int process_switch(PCB *p_pcb_old)
 	/* The following will only execute if the if block above is FALSE */
 	if (gp_current_process != p_pcb_old) {
 		if (state == RDY){
-			p_pcb_old->m_state = RDY;
+			if (p_pcb_old->m_state == RUN) {
+				p_pcb_old->m_state = RDY;
+			}
+
 			p_pcb_old->mp_sp = (U32 *) __get_MSP(); // save the old process's sp
 			gp_current_process->m_state = RUN;
 			__set_MSP((U32) gp_current_process->mp_sp); //switch to the new proc's stack
@@ -158,6 +181,7 @@ int process_switch(PCB *p_pcb_old)
 	}
 	return RTX_OK;
 }
+
 /**
  * @brief release_processor().
  * @return RTX_ERR on error and zero on success
@@ -177,9 +201,10 @@ int k_release_processor(void)
 
 	if ( p_pcb_old == NULL ) {
 		p_pcb_old = gp_current_process;
-	} else {
-		enqueue_priority_queue(ready_queue, p_pcb_old, k_get_process_priority(p_pcb_old->m_pid));
 	}
+	// else {
+		// enqueue_priority_queue(ready_queue, p_pcb_old, k_get_process_priority(p_pcb_old->m_pid));
+	// }
 	process_switch(p_pcb_old);
 	return RTX_OK;
 }

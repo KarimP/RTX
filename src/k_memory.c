@@ -56,32 +56,6 @@ U8 *p_end;
 0x10000000+---------------------------+ Low Address
 
 */
-
-void printOutQueues() {
-	#ifdef DEBUG_1
-	int i;
-	PCB *pcb;
-
-	// printf("\n---------- Blocked Queue ---------- \n");
-	// for (i = 0; i < NUM_PRIORITIES; ++i) {
-	// 	printf("blocked_queue[%d]: \n", i);
-	// 	for (pcb = blocked_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
-	// 		printf("%d, ", pcb->m_pid);
-	// 	}
-	// }
-
-	printf("\n---------- Ready Queue ----------");
-	for (i = 0; i < NUM_PRIORITIES; ++i) {
-		printf("\nready_queue[%d]: \n", i);
-		for (pcb = ready_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
-			printf("%d, ", pcb->m_pid);
-		}
-	}
-
-	printf("\n");
-	#endif /* DEBUG_1 */
-}
-
 void memory_init(void)
 {
 	int i;
@@ -104,7 +78,9 @@ void memory_init(void)
 		gp_pcbs[i] = (PCB *)p_end;
 		p_end += sizeof(PCB);
 	}
+
 	#ifdef DEBUG_1
+	printf("NULL = %d \n", NULL);
 	printf("gp_pcbs[0] = 0x%x \n", gp_pcbs[0]);
 	printf("gp_pcbs[1] = 0x%x \n", gp_pcbs[1]);
 	printf("gp_pcbs[2] = 0x%x \n", gp_pcbs[2]);
@@ -238,9 +214,9 @@ U32 *alloc_stack(U32 size_b)
 
 void *k_request_memory_block(void)
 {
+	PCB *pcb;
+	int process_priority;
 	mem_blk blk = dequeue(heap_q);
-	
-	//printOutQueues();
 
 	#ifdef DEBUG_1
 	printf("k_request_memory_block: entering...\n");
@@ -249,8 +225,11 @@ void *k_request_memory_block(void)
 	// atomic ( on ) ;
 
 	while (blk == NULL ) {
-		//put PCB on blocked_resource_q ;
-		enqueue_priority_queue(blocked_queue, gp_current_process, k_get_process_priority(gp_current_process->m_pid));
+
+		process_priority = k_get_process_priority(gp_current_process->m_pid);
+		pop_queue(ready_queue, gp_current_process->m_pid, process_priority);
+
+		enqueue_priority_queue(blocked_queue, gp_current_process, process_priority);
 
 		//set process state to BLOCKED_ON_RESOURCE ;
 		gp_current_process->m_state = BLOCKED_ON_RESOURCE;

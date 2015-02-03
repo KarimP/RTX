@@ -41,9 +41,9 @@ void set_up_testing_statements() {
 void printTestResults(int outcome) {
 	if(testCounter > NUM_TESTS) {
 
-		#ifdef DEBUG_0
-		//printf("Test: %x\n", testCounter);
-		#endif /* DEBUG_0 */
+		#ifdef DEBUG_1
+		printf("Test: %x\n", testCounter);
+		#endif /* DEBUG_1 */
 
 		testCounter++;
 		return;
@@ -88,17 +88,6 @@ void set_test_procs() {
 
 	g_test_procs[0].m_priority = 4;
 
-	//g_test_procs[3].m_priority = LOW;
-	//g_test_procs[4].m_priority = LOWEST;
-
-	// #ifdef DEBUG_1
-	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
-	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
-	// printf("g_test_procs[2] = 0x%x \n", g_test_procs[2].m_priority);
-	// printf("g_test_procs[3] = 0x%x \n", g_test_procs[3].m_priority);
-	// printf("---------------------- \n");
-	// #endif /* DEBUG_1 */
-
 	g_test_procs[0].mpf_start_pc = &null_proc;
 	g_test_procs[1].mpf_start_pc = &proc1;
 	g_test_procs[2].mpf_start_pc = &proc2;
@@ -108,14 +97,6 @@ void set_test_procs() {
 	g_test_procs[6].mpf_start_pc = &proc6;
 
 	set_up_testing_statements();
-
-	// #ifdef DEBUG_1
-	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
-	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
-	// printf("g_test_procs[2] = 0x%x \n", g_test_procs[2].m_priority);
-	// printf("g_test_procs[3] = 0x%x \n", g_test_procs[3].m_priority);
-	// printf("---------------------- \n");
-	// #endif /* DEBUG_1 */
 }
 
 /**
@@ -125,9 +106,9 @@ void null_proc(void)
 {
 	while (1) {
 
-		#ifdef DEBUG_0
+		#ifdef DEBUG_1
 		printf("null process running\n");
-		#endif /* DEBUG_0 */
+		#endif /* DEBUG_1 */
 
 		release_processor();
 	}
@@ -209,8 +190,8 @@ void memory_management_test(void)
 	while (1) {
 
 		//	allocate some blocks of memory
-	 	void *mem_blks[10];
-	 	int num_blks = 10;
+	 	void *mem_blks[25];
+	 	int num_blks = 25;
 	 	int passed = TRUE;
 		int i, j;
 
@@ -231,7 +212,6 @@ void memory_management_test(void)
 				break;
 			}
 		}
-
 
 	 	//deallocate all blocks but 1
 		for (i = 0; i < num_blks-1; ++i) {
@@ -305,6 +285,11 @@ void priority_test(void)
 			passed = FALSE;
 		}
 
+		//set this processes' priority to the same one
+		if (set_process_priority(PROC_PRIORITY_PID, MEDIUM) == RTX_ERR) {
+			passed = FALSE;
+		}
+
 		//set this processes' priority to a higher one
 		if (set_process_priority(PROC_PRIORITY_PID, HIGH) == RTX_ERR) {
 			passed = FALSE;
@@ -368,7 +353,7 @@ void preemption_check(void)
 }
 
 /**
- * @brief: Process 6:
+ * @brief: Process 6: Allocates all blocks of memory
 */
 void proc6(void)
 {

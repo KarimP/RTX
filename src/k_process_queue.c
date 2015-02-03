@@ -1,7 +1,43 @@
 #include "k_process_queue.h"
 
+#ifdef DEBUG_0
+#include "printf.h"
+#endif /* ! DEBUG_0 */
+
 process_queue **ready_queue;
 process_queue **blocked_queue;
+
+void printOutQueues() {
+	#ifdef DEBUG_0
+	int i;
+	PCB *pcb;
+
+	// printf("\n---------- Blocked Queue ---------- ");
+	// for (i = 0; i < NUM_PRIORITIES; ++i) {
+	// 	printf("\nblocked_queue[%d]: \n", i);
+	// 	for (pcb = blocked_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
+	// 		printf("%d, ", pcb->m_pid);
+	// 	}
+	// }
+
+	printf("\n\n---------- Ready Queue ----------");
+	for (i = 0; i < NUM_PRIORITIES; ++i) {
+		printf("\nready_queue[%d]: \n", i);
+		for (pcb = ready_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
+			printf("%d, ", pcb->m_pid);
+		}
+
+		printf(" LAST: %d, ", ready_queue[i]->last->m_pid);
+	}
+
+	// printf("\nready_queue[1]: \n");
+	// for (pcb = ready_queue[1]->first; pcb != NULL; pcb=pcb->mp_next) {
+	// 	printf("%d, ", pcb->m_pid);
+	// }
+
+	printf("\n");
+	#endif /* DEBUG_1 */
+}
 
 void initialize_priority_queue(process_queue **priority_queue)
 {
@@ -49,6 +85,37 @@ PCB *dequeue_priority_queue(process_queue **p_queue, int priority)
 	return item;
 }
 
+PCB *pop_queue(process_queue **queue, int process_id, int priority) {
+	PCB *pcb = NULL;
+	PCB *prev_pcb = NULL;
+
+	for (pcb = queue[priority]->first; pcb != NULL; pcb = pcb->mp_next) {
+		if (pcb->m_pid == process_id) {
+			if (prev_pcb == NULL) {
+				dequeue_priority_queue(queue, priority);
+			} else {
+				prev_pcb->mp_next = pcb->mp_next;
+
+				if (prev_pcb->mp_next == NULL) {
+					queue[priority]->last = prev_pcb;
+				}
+			}
+
+			if (pcb->mp_next == NULL) {
+				queue[priority]->last = prev_pcb;
+			}
+
+			pcb->mp_next = NULL;
+			return pcb;
+		}
+
+		prev_pcb = pcb;
+	}
+
+	return NULL;
+}
+
+//SHOULD CALL POP THEN ENQUEUE
 PCB *search_and_change_process_priority(process_queue **queue, int process_id, int prev_priority, int priority)
 {
 	PCB *pcb = NULL;
@@ -60,8 +127,13 @@ PCB *search_and_change_process_priority(process_queue **queue, int process_id, i
 				dequeue_priority_queue(queue, prev_priority);
 			} else {
 				prev_pcb->mp_next = pcb->mp_next;
+
+				if (prev_pcb->mp_next == NULL) {
+					queue[prev_priority]->last = prev_pcb;
+				}
 			}
 
+			pcb->mp_next = NULL;
 			enqueue_priority_queue(queue, pcb, priority);
 			return pcb;
 		}
@@ -97,13 +169,13 @@ int k_set_process_priority(int process_id, int priority)
 	}
 
 	for (i = 0; i < NUM_TEST_PROCS; ++i) {
-		if (g_proc_table[i].m_pid == gp_current_process->m_pid) {
-			current_process_priority = g_proc_table[i].m_priority;
-		}
-
 		if (g_proc_table[i].m_pid == process_id) {
 			prev_priority = g_proc_table[i].m_priority;
 			g_proc_table[i].m_priority = priority;
+		}
+
+		if (g_proc_table[i].m_pid == gp_current_process->m_pid) {
+			current_process_priority = g_proc_table[i].m_priority;
 		}
 	}
 
@@ -111,6 +183,7 @@ int k_set_process_priority(int process_id, int priority)
 	if (prev_priority == -1) {
 		return RTX_ERR;
 	} else if (prev_priority == priority) { //do nothing
+
 		return RTX_OK;
 	}
 
