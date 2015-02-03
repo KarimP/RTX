@@ -1,43 +1,7 @@
 #include "k_process_queue.h"
 
-#ifdef DEBUG_0
-#include "printf.h"
-#endif /* ! DEBUG_0 */
-
 process_queue **ready_queue;
 process_queue **blocked_queue;
-
-void printOutQueues() {
-	#ifdef DEBUG_0
-	int i;
-	PCB *pcb;
-
-	// printf("\n---------- Blocked Queue ---------- ");
-	// for (i = 0; i < NUM_PRIORITIES; ++i) {
-	// 	printf("\nblocked_queue[%d]: \n", i);
-	// 	for (pcb = blocked_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
-	// 		printf("%d, ", pcb->m_pid);
-	// 	}
-	// }
-
-	printf("\n\n---------- Ready Queue ----------");
-	for (i = 0; i < NUM_PRIORITIES; ++i) {
-		printf("\nready_queue[%d]: \n", i);
-		for (pcb = ready_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
-			printf("%d, ", pcb->m_pid);
-		}
-
-		printf(" LAST: %d, ", ready_queue[i]->last->m_pid);
-	}
-
-	// printf("\nready_queue[1]: \n");
-	// for (pcb = ready_queue[1]->first; pcb != NULL; pcb=pcb->mp_next) {
-	// 	printf("%d, ", pcb->m_pid);
-	// }
-
-	printf("\n");
-	#endif /* DEBUG_1 */
-}
 
 void initialize_priority_queue(process_queue **priority_queue)
 {

@@ -80,7 +80,6 @@ void memory_init(void)
 	}
 
 	#ifdef DEBUG_1
-	printf("NULL = %d \n", NULL);
 	printf("gp_pcbs[0] = 0x%x \n", gp_pcbs[0]);
 	printf("gp_pcbs[1] = 0x%x \n", gp_pcbs[1]);
 	printf("gp_pcbs[2] = 0x%x \n", gp_pcbs[2]);
@@ -91,15 +90,10 @@ void memory_init(void)
 	#endif /* ! DEBUG_1 */
 
 	/* prepare for alloc_stack() to allocate memory for stacks */
-
 	gp_stack = (U32 *)RAM_END_ADDR;
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
 		--gp_stack;
 	}
-
-	// #ifdef DEBUG_1
-	// printf("gpstack a= 0x%x \n", gp_stack);
-	// #endif /* ! DEBUG_1 */
 
 	//allocate memory for ready queue
 	ready_queue = (process_queue**)p_end;
@@ -141,22 +135,12 @@ void memory_init(void)
 	}
 	initialize_priority_queue(blocked_queue);
 
-	// #ifdef DEBUG_1
-	// run_PQ_test();
-	// #endif /* ! DEBUG_1 */
-
 }
 
 int setup_heap(void)
 {
 	mem_blk blk;
 	int counter = 0;
-
-	#ifdef DEBUG_1
-	printf("gpstack b= 0x%x \n", gp_stack);
-	printf("sizeof(queue_node): %d \n", sizeof(queue_node));
-	printf("sizeof(queue_node*) %d \n", sizeof(queue_node*));
-	#endif /* ! DEBUG_1 */
 
   	// allocate memory for heap memory queue
 	heap_q = (queue*)p_end;
@@ -222,8 +206,6 @@ void *k_request_memory_block(void)
 	printf("k_request_memory_block: entering...\n");
 	#endif /* ! DEBUG_1 */
 
-	// atomic ( on ) ;
-
 	while (blk == NULL ) {
 
 		process_priority = k_get_process_priority(gp_current_process->m_pid);
@@ -241,7 +223,6 @@ void *k_request_memory_block(void)
 	printf("k_request_memory_block: exiting...\nblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\n", blk, blk + sizeof(mem_blk), heap_q->first);
 	#endif /* ! DEBUG_1 */
 
-	// atomic ( off ) ;
 	return blk + sizeof(mem_blk);
 }
 

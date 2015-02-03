@@ -362,35 +362,3 @@ void proc6(void)
 		request_memory_block();
 	}
 }
-
-
-/**
-tests:
-	MEMORY
-	-allocate all blocks
-	-deallocate all blocks
-	-allocate all blocks + 1
-		-ensure process gets blocked
-		-last allocated kept in a global variable, another process releases that block
-	-deallocate null, < p_end, > gp_stack, mid block - DONE
-	-deallocate block that has not been allocated - DONE
-
-	SCHEDULAR
-	-set current process priority to higher when highest - DONE
-	-set current process priority to lower but still highest - DONE
-	-set current process priority to lower than next-highest - WILL NOT BE DONE
-	-set non-current process priority to higher than current - DONE
-	-set non-current process priority higher but lower than current
-	-set non-current process priority lower than current
-	-block all processes to ensure null is running
-	-block all user processes but one <- unblocked one will get called multiple times back to back
-
-	ideas for some proc tests:
-	one test proc that continuously requests memory till all is gone
-	one that verifies unique memory blocks are returns upon request
-	one test proc which requests, releases, and requests again gets the same memory block
-	one test proc which checks that null proc priority cannot be changed
-	one test proc that only requests one memory block and then releases processor
-	one test proc to use set_proc_priority to manipulate flow of procs
-	**investigate SVC interrupts
-*/
