@@ -41,11 +41,14 @@ void process_init()
 
         /* fill out the initialization table */
 	set_test_procs();
+
+	// #ifdef DEBUG_0
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
 	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
 	// printf("g_test_procs[2] = 0x%x \n", g_test_procs[2].m_priority);
 	// printf("g_test_procs[3] = 0x%x \n", g_test_procs[3].m_priority);
 	// printf("---------------------- \n");
+	// #endif /* DEBUG_0 */
 
 	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_proc_table[i].m_pid = g_test_procs[i].m_pid;
@@ -54,10 +57,18 @@ void process_init()
 
 		//change priority to lowest if its out of bounds so that the user process runs
 
+		// #ifdef DEBUG_0
 		// printf("g_test_procs[%d] = 0x%x \n", i, g_test_procs[i].m_priority);
-		if (g_test_procs[i].m_priority > LOWEST_PRIORITY || g_test_procs[i].m_priority < HIGHEST_PRIORITY) {
-			g_test_procs[i].m_priority = LOWEST_PRIORITY;
-			// printf("g_test_procs[%d] = 0x%x \n", i, g_test_procs[i].m_priority);
+		// #endif /* DEBUG_0 */
+
+		if (g_test_procs[i].m_pid != 0){
+			if (g_test_procs[i].m_priority > LOWEST_PRIORITY || g_test_procs[i].m_priority < HIGHEST_PRIORITY) {
+				g_test_procs[i].m_priority = LOWEST_PRIORITY;
+
+				// #ifdef DEBUG_0
+				// printf("g_test_procs[%d] = 0x%x \n", i, g_test_procs[i].m_priority);
+				// #endif /* DEBUG_0 */
+			}
 		}
 		g_proc_table[i].m_priority = g_test_procs[i].m_priority;
 	}
@@ -97,6 +108,11 @@ PCB *scheduler(void)
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
 		next_proc = dequeue_priority_queue(ready_queue, i);
 		if (next_proc != NULL) {
+
+			#ifdef DEBUG_1
+			printf("\nprocess id: %d is next \n", next_proc->m_pid);
+			#endif /* DEBUG_1 */
+
 			return next_proc;
 		}
 	}
@@ -129,7 +145,6 @@ int process_switch(PCB *p_pcb_old)
 	}
 
 	/* The following will only execute if the if block above is FALSE */
-
 	if (gp_current_process != p_pcb_old) {
 		if (state == RDY){
 			p_pcb_old->m_state = RDY;
@@ -163,7 +178,7 @@ int k_release_processor(void)
 	if ( p_pcb_old == NULL ) {
 		p_pcb_old = gp_current_process;
 	} else {
-		enqueue_priority_queue(ready_queue, p_pcb_old, get_process_priority(p_pcb_old->m_pid));
+		enqueue_priority_queue(ready_queue, p_pcb_old, k_get_process_priority(p_pcb_old->m_pid));
 	}
 	process_switch(p_pcb_old);
 	return RTX_OK;

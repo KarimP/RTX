@@ -57,12 +57,40 @@ U8 *p_end;
 
 */
 
+void printOutQueues() {
+	#ifdef DEBUG_1
+	int i;
+	PCB *pcb;
+
+	// printf("\n---------- Blocked Queue ---------- \n");
+	// for (i = 0; i < NUM_PRIORITIES; ++i) {
+	// 	printf("blocked_queue[%d]: \n", i);
+	// 	for (pcb = blocked_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
+	// 		printf("%d, ", pcb->m_pid);
+	// 	}
+	// }
+
+	printf("\n---------- Ready Queue ----------");
+	for (i = 0; i < NUM_PRIORITIES; ++i) {
+		printf("\nready_queue[%d]: \n", i);
+		for (pcb = ready_queue[i]->first; pcb != NULL; pcb=pcb->mp_next) {
+			printf("%d, ", pcb->m_pid);
+		}
+	}
+
+	printf("\n");
+	#endif /* DEBUG_1 */
+}
+
 void memory_init(void)
 {
 	int i;
 
 	p_end = (U8 *)&Image$$RW_IRAM1$$ZI$$Limit;
+
+	#ifdef DEBUG_1
 	printf("pend = 0x%x \n", p_end);
+	#endif /* ! DEBUG_1 */
 
 	/* 4 bytes padding */
 	p_end += 4;
@@ -76,12 +104,15 @@ void memory_init(void)
 		gp_pcbs[i] = (PCB *)p_end;
 		p_end += sizeof(PCB);
 	}
-#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("gp_pcbs[0] = 0x%x \n", gp_pcbs[0]);
 	printf("gp_pcbs[1] = 0x%x \n", gp_pcbs[1]);
 	printf("gp_pcbs[2] = 0x%x \n", gp_pcbs[2]);
 	printf("gp_pcbs[3] = 0x%x \n", gp_pcbs[3]);
-#endif
+	printf("gp_pcbs[4] = 0x%x \n", gp_pcbs[4]);
+	printf("gp_pcbs[5] = 0x%x \n", gp_pcbs[5]);
+	printf("gp_pcbs[6] = 0x%x \n", gp_pcbs[6]);
+	#endif /* ! DEBUG_1 */
 
 	/* prepare for alloc_stack() to allocate memory for stacks */
 
@@ -90,17 +121,25 @@ void memory_init(void)
 		--gp_stack;
 	}
 
+	// #ifdef DEBUG_1
 	// printf("gpstack a= 0x%x \n", gp_stack);
+	// #endif /* ! DEBUG_1 */
 
 	//allocate memory for ready queue
 	ready_queue = (process_queue**)p_end;
+
+	#ifdef DEBUG_1
 	printf("Start of ready_queue array: 0x%x \n", ready_queue);
+	#endif /* ! DEBUG_1 */
 
 	p_end += (NUM_PRIORITIES) * sizeof(process_queue *);
 
 	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
 		ready_queue[i] = (process_queue *)p_end;
+
+		#ifdef DEBUG_1
 		printf("ready_queue[%d]: 0x%x \n", i, ready_queue[i]);
+		#endif /* ! DEBUG_1 */
 
 		p_end += sizeof(process_queue);
 	}
@@ -108,21 +147,27 @@ void memory_init(void)
 
 	//allocate memory for blocked queue
 	blocked_queue = (process_queue**)p_end;
+
+	#ifdef DEBUG_1
 	printf("Start of blocked_queue array: 0x%x \n", blocked_queue);
+	#endif /* ! DEBUG_1 */
 
 	p_end += NUM_PRIORITIES * sizeof(process_queue*);
 
 	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
 		blocked_queue[i] = (process_queue *)p_end;
+
+		#ifdef DEBUG_1
 		printf("blocked_queue[%d]: 0x%x \n", i, blocked_queue[i]);
+		#endif /* ! DEBUG_1 */
 
 		p_end += sizeof(process_queue);
 	}
 	initialize_priority_queue(blocked_queue);
 
-#ifdef DEBUG_0
+	// #ifdef DEBUG_1
 	// run_PQ_test();
-#endif
+	// #endif /* ! DEBUG_1 */
 
 }
 
@@ -131,10 +176,11 @@ int setup_heap(void)
 	mem_blk blk;
 	int counter = 0;
 
+	#ifdef DEBUG_1
 	printf("gpstack b= 0x%x \n", gp_stack);
-
 	printf("sizeof(queue_node): %d \n", sizeof(queue_node));
 	printf("sizeof(queue_node*) %d \n", sizeof(queue_node*));
+	#endif /* ! DEBUG_1 */
 
   	// allocate memory for heap memory queue
 	heap_q = (queue*)p_end;
@@ -149,11 +195,12 @@ int setup_heap(void)
 		counter++;
 	}
 
+	#ifdef DEBUG_1
 	printf("We have %d memory blocks\n", counter);
 	printf("heap_q->first = 0x%x \n", heap_q->first);
 	printf("heap_q->last = 0x%x \n", heap_q->last);
-
 	printf("gpstack b= 0x%x \n", gp_stack);
+	#endif /* ! DEBUG_1 */
 
 	if (heap_q->first == (mem_blk)p_end){
 		return RTX_OK;
@@ -182,7 +229,9 @@ U32 *alloc_stack(U32 size_b)
 		--gp_stack;
 	}
 
+	// #ifdef DEBUG_1
 	//printf("gpstack = 0x%x \n", gp_stack);
+	// #endif /* ! DEBUG_1 */
 
 	return sp;
 }
@@ -190,16 +239,18 @@ U32 *alloc_stack(U32 size_b)
 void *k_request_memory_block(void)
 {
 	mem_blk blk = dequeue(heap_q);
+	
+	//printOutQueues();
 
-#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("k_request_memory_block: entering...\n");
-#endif /* ! DEBUG_0 */
+	#endif /* ! DEBUG_1 */
 
 	// atomic ( on ) ;
 
 	while (blk == NULL ) {
 		//put PCB on blocked_resource_q ;
-		enqueue_priority_queue(blocked_queue, gp_current_process, get_process_priority(gp_current_process->m_pid));
+		enqueue_priority_queue(blocked_queue, gp_current_process, k_get_process_priority(gp_current_process->m_pid));
 
 		//set process state to BLOCKED_ON_RESOURCE ;
 		gp_current_process->m_state = BLOCKED_ON_RESOURCE;
@@ -207,9 +258,9 @@ void *k_request_memory_block(void)
 		k_release_processor();
 	}
 
-#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("k_request_memory_block: exiting...\nblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\n", blk, blk + sizeof(mem_blk), heap_q->first);
-#endif /* ! DEBUG_0 */
+	#endif /* ! DEBUG_1 */
 
 	// atomic ( off ) ;
 	return blk + sizeof(mem_blk);
@@ -221,9 +272,9 @@ int k_release_memory_block(void *p_mem_blk)
 	int i;
 	PCB *pcb = NULL;
 
-#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("k_release_memory_block: releasing block @ 0x%x \n", p_mem_blk);
-#endif /* ! DEBUG_0 */
+	#endif /* ! DEBUG_1 */
 
 	if ( (rel_blk == NULL) || ((U8 *)rel_blk < p_end) || ((U32 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > gp_stack) || ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE*4 + sizeof(queue_node)*4) != 0) ) {
 		return RTX_ERR;
@@ -243,9 +294,9 @@ int k_release_memory_block(void *p_mem_blk)
 		}
 	}
 
-#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("k_release_memory_block: exiting...\nheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\n", heap_q->first, heap_q->first->next);
-#endif /* ! DEBUG_0 */
+	#endif /* ! DEBUG_1 */
 
 	return RTX_OK;
 }

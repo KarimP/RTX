@@ -14,20 +14,37 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
+#define TRUE 1
+#define FALSE 0
+
+#define PROC_MEM_PID 3
+#define PROC_PRIORITY_PID 4
+#define PROC_PREEMPTION_PID 5
+#define NUM_TESTS 4
+
 /* initialization table item */
 PROC_INIT g_test_procs[NUM_TEST_PROCS];
 int testCounter = 1;
 int passedtest = 0;
 
+int process4_preempted = FALSE;
+int testing_priority = FALSE;
 
 void set_up_testing_statements() {
+
+	#ifdef DEBUG_0
 	printf("G017_test: START\n");
-	printf("G017_test: total %x tests\n", + NUM_TEST_PROCS);
+	printf("G017_test: total %x tests\n", + NUM_TESTS);
+	#endif /* DEBUG_0 */
 }
 
 void printTestResults(int outcome) {
-	if(testCounter > NUM_TEST_PROCS) {
-		printf("Test: %x\n", testCounter);
+	if(testCounter > NUM_TESTS) {
+
+		#ifdef DEBUG_0
+		//printf("Test: %x\n", testCounter);
+		#endif /* DEBUG_0 */
+
 		testCounter++;
 		return;
 	}
@@ -35,191 +52,332 @@ void printTestResults(int outcome) {
 	if(outcome == 1) {
 		passedtest++;
 	}
+
+	#ifdef DEBUG_0
 	printf("G017_test: test %x %s\n", testCounter, outcome == 1? "OK" : "FAIL");
+	#endif /* DEBUG_0 */
+
 	testCounter++;
-	if(testCounter > NUM_TEST_PROCS) {
-		printf("G017_test: %x/%x tests OK\n", passedtest, NUM_TEST_PROCS);
-		if(passedtest!= NUM_TEST_PROCS) {
-			printf("G017_test: %x/%x tests FAIL\n", (NUM_TEST_PROCS - passedtest),NUM_TEST_PROCS);
+	if (testCounter > NUM_TESTS) {
+
+		#ifdef DEBUG_0
+		printf("G017_test: %x/%x tests OK\n", passedtest, NUM_TESTS);
+		#endif /* DEBUG_0 */
+
+		if (passedtest!= NUM_TESTS) {
+
+			#ifdef DEBUG_0
+			printf("G017_test: %x/%x tests FAIL\n", (NUM_TESTS - passedtest),NUM_TESTS);
+			#endif /* DEBUG_0 */
+
 		}
+
+		#ifdef DEBUG_0
 		printf("G017_test: END\n");
+		#endif /* DEBUG_0 */
 	}
 }
 
 void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
-		g_test_procs[i].m_pid=(U32)(i+1);
-		g_test_procs[i].m_priority=LOW;
+		g_test_procs[i].m_pid=(U32)(i);
+		g_test_procs[i].m_priority=MEDIUM;
 		g_test_procs[i].m_stack_size=0x100;
 	}
+
+	g_test_procs[0].m_priority = 4;
 
 	//g_test_procs[3].m_priority = LOW;
 	//g_test_procs[4].m_priority = LOWEST;
 
+	// #ifdef DEBUG_1
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
 	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
 	// printf("g_test_procs[2] = 0x%x \n", g_test_procs[2].m_priority);
 	// printf("g_test_procs[3] = 0x%x \n", g_test_procs[3].m_priority);
 	// printf("---------------------- \n");
+	// #endif /* DEBUG_1 */
 
-	g_test_procs[0].mpf_start_pc = &proc1;
-	g_test_procs[1].mpf_start_pc = &proc2;
-	g_test_procs[2].mpf_start_pc = &proc3;
-	g_test_procs[3].mpf_start_pc = &proc4;
-	g_test_procs[4].mpf_start_pc = &proc5;
+	g_test_procs[0].mpf_start_pc = &null_proc;
+	g_test_procs[1].mpf_start_pc = &proc1;
+	g_test_procs[2].mpf_start_pc = &proc2;
+	g_test_procs[3].mpf_start_pc = &memory_management_test;
+	g_test_procs[4].mpf_start_pc = &priority_test;
+	g_test_procs[5].mpf_start_pc = &preemption_check;
+	g_test_procs[6].mpf_start_pc = &proc6;
 
 	set_up_testing_statements();
+
+	// #ifdef DEBUG_1
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
 	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
 	// printf("g_test_procs[2] = 0x%x \n", g_test_procs[2].m_priority);
 	// printf("g_test_procs[3] = 0x%x \n", g_test_procs[3].m_priority);
 	// printf("---------------------- \n");
+	// #endif /* DEBUG_1 */
 }
 
 /**
- * @brief: a process that prints five uppercase letters
+ * @brief: null process
+ */
+void null_proc(void)
+{
+	while (1) {
+
+		#ifdef DEBUG_0
+		printf("null process running\n");
+		#endif /* DEBUG_0 */
+
+		release_processor();
+	}
+}
+
+/**
+ * @brief: Process 1: a process that prints five uppercase letters
  *         and then yields the cpu.
  */
 void proc1(void)
 {
 	int i = 0;
 	int ret_val = 10;
-	while ( 1) {
+	while (1) {
+
+		void *blk = request_memory_block();
+
 		if ( i != 0 && i%5 == 0 ) {
+
+			#ifdef DEBUG_1
 			uart0_put_string("\n\r");
-			printTestResults(1);
+			#endif /* DEBUG_1 */
+
+			printTestResults(TRUE);
 			ret_val = release_processor();
-// #ifdef DEBUG_0
-// 			printf("proc1: ret_val=%d\n", ret_val);
-// #endif /* DEBUG_0 */
+
+			#ifdef DEBUG_1
+			printf("proc1: ret_val=%d\n", ret_val);
+			#endif /* DEBUG_1 */
 		}
+
+		#ifdef DEBUG_1
 		uart0_put_char('A' + i%26);
+		#endif /* DEBUG_1 */
+
 		i++;
 	}
 }
 
 /**
- * @brief: a process that prints five numbers
+ * @brief: Process 2: a process that prints five numbers
  *         and then yields the cpu.
  */
 void proc2(void)
 {
 	int i = 0;
 	int ret_val = 20;
-	while ( 1) {
+	while (1) {
+
+		void *blk = request_memory_block();
+
 		if ( i != 0 && i%5 == 0 ) {
+
+			#ifdef DEBUG_1
 			uart0_put_string("\n\r");
-			printTestResults(0);
+			#endif /* DEBUG_1 */
+
+			printTestResults(TRUE);
 			ret_val = release_processor();
-// #ifdef DEBUG_0
-// 			printf("proc2: ret_val=%d\n", ret_val);
-// #endif /* DEBUG_0 */
+
+			#ifdef DEBUG_1
+			printf("proc2: ret_val=%d\n", ret_val);
+			#endif /* DEBUG_1 */
 		}
+
+		#ifdef DEBUG_1
 		uart0_put_char('0' + i%10);
+		#endif /* DEBUG_1 */
+
 		i++;
 	}
 }
 
 /**
- * @brief: check if handling of processes works (get and set priority queues)
+ * @brief: Process 3: check if memory management works
  */
-void proc4(void)
+void memory_management_test(void)
 {
 	while (1) {
-		printf("proc4: ret \n");
-		printTestResults(1);
-		release_processor();
-	}
-}
 
-/**
- * @brief: check if handling of processes works (get and set priority queues)
- */
-void proc5(void)
-{
-	while (1) {
-		printf("proc5: ret \n");
-		printTestResults(1);
-		release_processor();
-	}
-}
-
-void proc6(void)
-{
-	while (1) {
-		printf("proc6: ret \n");
-		printTestResults(1);
-		release_processor();
-	}
-}
-
-/**
- * @brief: check if memory management works
- */
-void proc3(void)
-{
-	while (1) {
-	//	allocate some blocks of memory
-	 	void *mem_blks[8];
-	 	int num_blks = 8;
-	 	int passed = 1;
-		int i;
+		//	allocate some blocks of memory
+	 	void *mem_blks[10];
+	 	int num_blks = 10;
+	 	int passed = TRUE;
+		int i, j;
 
 		for (i = 0; i < num_blks; ++i) {
 			mem_blks[i] = request_memory_block();
 		}
 
+		//ensure that memory blocks are unique
+		for (i = 0; i < num_blks; ++i) {
+			for (j = 0; j < num_blks; ++j) {
+				if ((j != i) && (mem_blks[i] == mem_blks[j])) {
+					passed = FALSE;
+					break;
+				}
+			}
+
+			if (!passed) {
+				break;
+			}
+		}
+
+
 	 	//deallocate all blocks but 1
 		for (i = 0; i < num_blks-1; ++i) {
 			if (release_memory_block(mem_blks[i]) == RTX_ERR) {
-	 			passed = 0;
+	 			passed = FALSE;
 	 		}
 		}
 
 	 	//deallocate block that has not been allocated
 	 	if (release_memory_block(mem_blks[1]) != RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
 	 	//deallocate null block
 	 	if (release_memory_block(NULL) != RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
 	 	//deallocate address greater than the heap
 	 	if (release_memory_block((void *)0x10008000) != RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
 	 	//deallocate address less than the heap
 	 	if (release_memory_block((void *)0x10000000) != RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
 	 	//deallocate address that is the end of a memory block
 	 	if (release_memory_block((int *)mem_blks[num_blks - 1] - (uint32_t)1) != RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
 		//deallocate address that is the middle of a memory block
 	 	if (release_memory_block((int *)mem_blks[num_blks - 1] - (uint32_t)3) != RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
 	 	//deallocate the last held memory block
 	 	if (release_memory_block(mem_blks[num_blks - 1]) == RTX_ERR) {
-	 		passed = 0;
+	 		passed = FALSE;
 	 	}
 
-	 #ifdef DEBUG_0
+	 	#ifdef DEBUG_1
 	 	printf("testing memory blocks...%s \n", passed ? "passed" : "failed");
-	 #endif /* DEBUG_0 */
+	 	#endif /* DEBUG_1 */
 		printTestResults(passed);
 
 	 	release_processor();
 	 }
 }
+
+/**
+ * @brief: Process 4: check if handling of processes works (get and set priority queues)
+ */
+void priority_test(void)
+{
+	while (1) {
+
+		void *blk = request_memory_block();
+		int passed = TRUE;
+		testing_priority = TRUE;
+
+		//check to see if we can change null process priority
+		if (set_process_priority(0, HIGH) == RTX_OK) {
+			passed = FALSE;
+		}
+
+		//make sure it actually didn't end up changed the null proc priority
+		if (get_process_priority(0) != LOWEST + 1) {
+			passed = FALSE;
+		}
+
+		//set this processes' priority to a higher one
+		if (set_process_priority(PROC_PRIORITY_PID, HIGH) == RTX_ERR) {
+			passed = FALSE;
+		}
+
+		//go back to medium
+		if (set_process_priority(PROC_PRIORITY_PID, MEDIUM) == RTX_ERR) {
+			passed = FALSE;
+		}
+
+		//set non-current process priority lower than current
+		if (set_process_priority(PROC_PREEMPTION_PID, LOW) == RTX_ERR) {
+			passed = FALSE;
+		}
+
+		if (!passed) {
+			// printTestResults(passed);
+			testing_priority = FALSE;
+			release_processor();
+		}
+
+		//set another processes priority to higher than this one
+		process4_preempted = TRUE;
+		if (set_process_priority(PROC_PREEMPTION_PID, HIGH) == RTX_ERR) {
+			testing_priority = FALSE;
+			release_processor();
+		}
+	}
+}
+
+/**
+ * @brief: Process 5: check if pre-emption occured with pid 4
+ */
+void preemption_check(void)
+{
+	while (1) {
+
+		void *blk = request_memory_block();
+		int passed = TRUE;
+
+		if (testing_priority) {
+			testing_priority = FALSE;
+
+			if (process4_preempted) {
+				process4_preempted = FALSE;
+			} else {
+				passed = FALSE; //we pre-empted when we weren't supposed to
+			}
+
+			if (set_process_priority(PROC_PREEMPTION_PID, MEDIUM) == RTX_ERR) {
+				passed = FALSE;
+			}
+
+		} else {
+			passed = FALSE;
+		}
+
+		printTestResults(passed);
+		release_processor();
+	}
+}
+
+/**
+ * @brief: Process 6:
+*/
+void proc6(void)
+{
+
+	while (1) {
+		request_memory_block();
+	}
+}
+
 
 /**
 tests:
@@ -233,10 +391,10 @@ tests:
 	-deallocate block that has not been allocated - DONE
 
 	SCHEDULAR
-	-set current process priority to higher when highest
-	-set current process priority to lower but still highest
-	-set current process priority to lower than next-highest
-	-set non-current process priority to higher than current
+	-set current process priority to higher when highest - DONE
+	-set current process priority to lower but still highest - DONE
+	-set current process priority to lower than next-highest - WILL NOT BE DONE
+	-set non-current process priority to higher than current - DONE
 	-set non-current process priority higher but lower than current
 	-set non-current process priority lower than current
 	-block all processes to ensure null is running

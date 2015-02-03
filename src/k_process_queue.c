@@ -14,7 +14,7 @@ void initialize_priority_queue(process_queue **priority_queue)
 
 int enqueue_priority_queue(process_queue **p_queue, PCB *item, int priority)
 {
-	if ((priority > LOWEST_PRIORITY) || (priority < HIGHEST_PRIORITY) || (item == NULL)) {
+	if ( (item->m_pid != 0 ) && ((priority > LOWEST_PRIORITY) || (priority < HIGHEST_PRIORITY) || (item == NULL))) {
 		return RTX_ERR;
 	}
 
@@ -43,7 +43,7 @@ PCB *dequeue_priority_queue(process_queue **p_queue, int priority)
 	if (p_queue[priority]->first == NULL) {
 		p_queue[priority]->last = NULL;
 	}
-	
+
 	item->mp_next = NULL;
 
 	return item;
@@ -83,15 +83,16 @@ int get_highest_queue_priority(process_queue **queue) {
 	return i;
 }
 
-int set_process_priority(int process_id, int priority)
+int k_set_process_priority(int process_id, int priority)
 {
 	int i;
+
 	int prev_priority = -1;
 	PCB *proc;
 	int current_process_priority;
 	process_queue **queue = ready_queue;
 
-	if (priority > LOWEST_PRIORITY || priority < HIGHEST_PRIORITY) {
+	if (process_id == 0 || priority > LOWEST_PRIORITY || priority < HIGHEST_PRIORITY) {
 		return RTX_ERR;
 	}
 
@@ -119,23 +120,15 @@ int set_process_priority(int process_id, int priority)
 		proc = search_and_change_process_priority(queue, process_id, prev_priority, priority);
 	}
 
-	// if (proc == NULL && gp_current_process->m_pid != process_id) {
-	// 	return RTX_ERR;
-	// }
-
-	if (current_process_priority < get_highest_queue_priority(ready_queue)) {
+	if (current_process_priority > get_highest_queue_priority(ready_queue)) {
 		k_release_processor();
 	}
-
-	// if ((queue == ready_queue && current_process_priority < priority) || (gp_current_process->m_pid == process_id && priority < get_highest_queue_priority(ready_queue)) ) {
-	// 	k_release_processor();
-	// }
 
 	return RTX_OK;
 
 }
 
-int get_process_priority(int process_id)
+int k_get_process_priority(int process_id)
 {
 	int i;
 	for (i = 0; i < NUM_TEST_PROCS; ++i) {
