@@ -38,6 +38,10 @@ void set_up_testing_statements() {
 	#endif /* DEBUG_0 */
 }
 
+/**
+ * @brief Formats the output of test cases
+ * @return Nothing to return
+ */
 void printTestResults(int outcome) {
 	if(testCounter > NUM_TESTS) {
 
@@ -78,6 +82,10 @@ void printTestResults(int outcome) {
 	}
 }
 
+/**
+ * @brief initializers the q_test_procs table
+ * @return Nothing to return
+ */
 void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {

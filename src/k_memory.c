@@ -137,6 +137,10 @@ void memory_init(void)
 
 }
 
+/**
+ * @brief allocates all of the remaining heap memory and sets up the memory queue
+ * @return RTX_ERR on error and RTX_OK on success
+ */
 int setup_heap(void)
 {
 	mem_blk blk;
@@ -196,6 +200,10 @@ U32 *alloc_stack(U32 size_b)
 	return sp;
 }
 
+/**
+ * @brief attempts to allocate a memory block for the process and blocks the process if that is not possible
+ * @return returns a memory block when it is possible to do so
+ */
 void *k_request_memory_block(void)
 {
 	PCB *pcb;
@@ -226,6 +234,10 @@ void *k_request_memory_block(void)
 	return blk + sizeof(mem_blk);
 }
 
+/**
+ * @brief deallocates the passed in memory block if it is possible to do so
+ * @return RTX_ERR on error and RTX_OK on success
+ */
 int k_release_memory_block(void *p_mem_blk)
 {
 	mem_blk rel_blk = (mem_blk)p_mem_blk - sizeof(mem_blk);

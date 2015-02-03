@@ -3,6 +3,10 @@
 process_queue **ready_queue;
 process_queue **blocked_queue;
 
+/**
+ * @brief sets the first and last of each queue to null within the priority queue
+ * @return nothing to return
+ */
 void initialize_priority_queue(process_queue **priority_queue)
 {
 	int i;
@@ -12,6 +16,10 @@ void initialize_priority_queue(process_queue **priority_queue)
 	}
 }
 
+/**
+ * @brief places the passed in node onto the end of the queue for the given priority
+ * @return RTX_ERR on error and RTX_OK on success
+ */
 int enqueue_priority_queue(process_queue **p_queue, PCB *item, int priority)
 {
 	if ( (item->m_pid != 0 ) && ((priority > LOWEST_PRIORITY) || (priority < HIGHEST_PRIORITY) || (item == NULL))) {
@@ -29,6 +37,10 @@ int enqueue_priority_queue(process_queue **p_queue, PCB *item, int priority)
 	return RTX_OK;
 }
 
+/**
+ * @brief removes the first node in the queue for the given prioity if possible
+ * @return first node in the queue or null if nothing is in the queue
+ */
 PCB *dequeue_priority_queue(process_queue **p_queue, int priority)
 {
 	PCB *item = NULL;
@@ -49,6 +61,10 @@ PCB *dequeue_priority_queue(process_queue **p_queue, int priority)
 	return item;
 }
 
+/**
+ * @brief Removes specified PCB from the queue
+ * @return Returns the PCB or NULL otherwise
+ */
 PCB *pop_queue(process_queue **queue, int process_id, int priority) {
 	PCB *pcb = NULL;
 	PCB *prev_pcb = NULL;
@@ -79,7 +95,10 @@ PCB *pop_queue(process_queue **queue, int process_id, int priority) {
 	return NULL;
 }
 
-//SHOULD CALL POP THEN ENQUEUE
+/**
+ * @brief Searches through the prioity queue until it finds the PCB, then it removes it and puts it in the appropraite queue
+ * @return Returns the PCB that was changed or NULL otherwise
+ */
 PCB *search_and_change_process_priority(process_queue **queue, int process_id, int prev_priority, int priority)
 {
 	PCB *pcb = NULL;
@@ -108,6 +127,10 @@ PCB *search_and_change_process_priority(process_queue **queue, int process_id, i
 	return NULL;
 }
 
+/**
+ * @brief gets the highest prioity node within the prioity queue
+ * @return highest priority within the priority queue
+ */
 int get_highest_queue_priority(process_queue **queue) {
 	int i;
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
@@ -119,6 +142,10 @@ int get_highest_queue_priority(process_queue **queue) {
 	return i;
 }
 
+/**
+ * @brief Sets the prioity of the process with a given Process ID
+ * @return Returns RTX_ERR on error and RTX_OK otherwise
+ */
 int k_set_process_priority(int process_id, int priority)
 {
 	int i;
@@ -165,6 +192,10 @@ int k_set_process_priority(int process_id, int priority)
 
 }
 
+/**
+ * @brief Gets the prioity for the given priority ID
+ * @return Priority of a given process ID
+ */
 int k_get_process_priority(int process_id)
 {
 	int i;
