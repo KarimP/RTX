@@ -54,7 +54,8 @@ void set_test_procs() {
 		g_test_procs[i].m_stack_size=0x100;
 	}
 
-	g_test_procs[3].m_priority = LOWEST;
+	//g_test_procs[3].m_priority = LOW;
+	//g_test_procs[4].m_priority = LOWEST;
 
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
 	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
@@ -66,6 +67,7 @@ void set_test_procs() {
 	g_test_procs[1].mpf_start_pc = &proc2;
 	g_test_procs[2].mpf_start_pc = &proc3;
 	g_test_procs[3].mpf_start_pc = &proc4;
+	g_test_procs[4].mpf_start_pc = &proc5;
 
 	set_up_testing_statements();
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
@@ -132,29 +134,48 @@ void proc4(void)
 }
 
 /**
+ * @brief: check if handling of processes works (get and set priority queues)
+ */
+void proc5(void)
+{
+	while (1) {
+		printf("proc5: ret \n");
+		printTestResults(1);
+		release_processor();
+	}
+}
+
+void proc6(void)
+{
+	while (1) {
+		printf("proc6: ret \n");
+		printTestResults(1);
+		release_processor();
+	}
+}
+
+/**
  * @brief: check if memory management works
  */
 void proc3(void)
 {
 	while (1) {
 	//	allocate some blocks of memory
-	 	void *mem_blks[10];
-	 	int num_blks = 10;
+	 	void *mem_blks[8];
+	 	int num_blks = 8;
 	 	int passed = 1;
+		int i;
 
-	 	while (num_blks > 0) {
-	 		num_blks--;
-	 		mem_blks[num_blks] = request_memory_block();
-	 	}
+		for (i = 0; i < num_blks; ++i) {
+			mem_blks[i] = request_memory_block();
+		}
 
 	 	//deallocate all blocks but 1
-	 	num_blks = 10;
-	 	while (num_blks > 1) {
-	 		num_blks--;
-	 		if (release_memory_block(mem_blks[num_blks]) == RTX_ERR) {
+		for (i = 0; i < num_blks-1; ++i) {
+			if (release_memory_block(mem_blks[i]) == RTX_ERR) {
 	 			passed = 0;
 	 		}
-	 	}
+		}
 
 	 	//deallocate block that has not been allocated
 	 	if (release_memory_block(mem_blks[1]) != RTX_ERR) {
@@ -177,17 +198,17 @@ void proc3(void)
 	 	}
 
 	 	//deallocate address that is the end of a memory block
-	 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)1) != RTX_ERR) {
+	 	if (release_memory_block((int *)mem_blks[num_blks - 1] - (uint32_t)1) != RTX_ERR) {
 	 		passed = 0;
 	 	}
 
 		//deallocate address that is the middle of a memory block
-	 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)3) != RTX_ERR) {
+	 	if (release_memory_block((int *)mem_blks[num_blks - 1] - (uint32_t)3) != RTX_ERR) {
 	 		passed = 0;
 	 	}
 
 	 	//deallocate the last held memory block
-	 	if (release_memory_block(mem_blks[0]) == RTX_ERR) {
+	 	if (release_memory_block(mem_blks[num_blks - 1]) == RTX_ERR) {
 	 		passed = 0;
 	 	}
 

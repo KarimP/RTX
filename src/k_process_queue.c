@@ -43,6 +43,8 @@ PCB *dequeue_priority_queue(process_queue **p_queue, int priority)
 	if (p_queue[priority]->first == NULL) {
 		p_queue[priority]->last = NULL;
 	}
+	
+	item->mp_next = NULL;
 
 	return item;
 }

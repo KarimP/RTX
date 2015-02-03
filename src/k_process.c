@@ -79,7 +79,6 @@ void process_init()
 
 		enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
 	}
-	setup_heap();
 }
 
 /*@brief: scheduler, pick the pid of the next to run process
