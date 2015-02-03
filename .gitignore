@@ -11,4 +11,5 @@
 *.sct
 *.dep
 *.tra
+*.__i
 context_switching.htm
