@@ -14,9 +14,37 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
-
 /* initialization table item */
 PROC_INIT g_test_procs[NUM_TEST_PROCS];
+int testCounter = 1;
+int passedtest = 0;
+
+
+void set_up_testing_statements() {
+	printf("G017_test: START\n");
+	printf("G017_test: total %x tests\n", + NUM_TEST_PROCS);
+}
+
+void printTestResults(int outcome) {
+	if(testCounter > NUM_TEST_PROCS) {
+		printf("Test: %x\n", testCounter);
+		testCounter++;
+		return;
+	}
+
+	if(outcome == 1) {
+		passedtest++;
+	}
+	printf("G017_test: test %x %s\n", testCounter, outcome == 1? "OK" : "FAIL");
+	testCounter++;
+	if(testCounter > NUM_TEST_PROCS) {
+		printf("G017_test: %x/%x tests OK\n", passedtest, NUM_TEST_PROCS);
+		if(passedtest!= NUM_TEST_PROCS) {
+			printf("G017_test: %x/%x tests FAIL\n", (NUM_TEST_PROCS - passedtest),NUM_TEST_PROCS);
+		}
+		printf("G017_test: END\n");
+	}
+}
 
 void set_test_procs() {
 	int i;
@@ -39,6 +67,7 @@ void set_test_procs() {
 	g_test_procs[2].mpf_start_pc = &proc3;
 	g_test_procs[3].mpf_start_pc = &proc4;
 
+	set_up_testing_statements();
 	// printf("g_test_procs[0] = 0x%x \n", g_test_procs[0].m_priority);
 	// printf("g_test_procs[1] = 0x%x \n", g_test_procs[1].m_priority);
 	// printf("g_test_procs[2] = 0x%x \n", g_test_procs[2].m_priority);
@@ -57,10 +86,11 @@ void proc1(void)
 	while ( 1) {
 		if ( i != 0 && i%5 == 0 ) {
 			uart0_put_string("\n\r");
+			printTestResults(1);
 			ret_val = release_processor();
-#ifdef DEBUG_0
-			printf("proc1: ret_val=%d\n", ret_val);
-#endif /* DEBUG_0 */
+// #ifdef DEBUG_0
+// 			printf("proc1: ret_val=%d\n", ret_val);
+// #endif /* DEBUG_0 */
 		}
 		uart0_put_char('A' + i%26);
 		i++;
@@ -78,10 +108,11 @@ void proc2(void)
 	while ( 1) {
 		if ( i != 0 && i%5 == 0 ) {
 			uart0_put_string("\n\r");
+			printTestResults(0);
 			ret_val = release_processor();
-#ifdef DEBUG_0
-			printf("proc2: ret_val=%d\n", ret_val);
-#endif /* DEBUG_0 */
+// #ifdef DEBUG_0
+// 			printf("proc2: ret_val=%d\n", ret_val);
+// #endif /* DEBUG_0 */
 		}
 		uart0_put_char('0' + i%10);
 		i++;
@@ -95,6 +126,7 @@ void proc4(void)
 {
 	while (1) {
 		printf("proc4: ret \n");
+		printTestResults(1);
 		release_processor();
 	}
 }
@@ -104,65 +136,68 @@ void proc4(void)
  */
 void proc3(void)
 {
-	//allocate some blocks of memory
- 	void *mem_blks[10];
- 	int num_blks = 10;
- 	int passed = 1;
+	while (1) {
+	//	allocate some blocks of memory
+	 	void *mem_blks[10];
+	 	int num_blks = 10;
+	 	int passed = 1;
 
- 	while (num_blks > 0) {
- 		num_blks--;
- 		mem_blks[num_blks] = request_memory_block();
- 	}
+	 	while (num_blks > 0) {
+	 		num_blks--;
+	 		mem_blks[num_blks] = request_memory_block();
+	 	}
 
- 	//deallocate all blocks but 1
- 	num_blks = 10;
- 	while (num_blks > 1) {
- 		num_blks--;
- 		if (release_memory_block(mem_blks[num_blks]) == RTX_ERR) {
- 			passed = 0;
- 		}
- 	}
+	 	//deallocate all blocks but 1
+	 	num_blks = 10;
+	 	while (num_blks > 1) {
+	 		num_blks--;
+	 		if (release_memory_block(mem_blks[num_blks]) == RTX_ERR) {
+	 			passed = 0;
+	 		}
+	 	}
 
- 	//deallocate block that has not been allocated
- 	if (release_memory_block(mem_blks[1]) != RTX_ERR) {
- 		passed = 0;
- 	}
+	 	//deallocate block that has not been allocated
+	 	if (release_memory_block(mem_blks[1]) != RTX_ERR) {
+	 		passed = 0;
+	 	}
 
- 	//deallocate null block
- 	if (release_memory_block(NULL) != RTX_ERR) {
- 		passed = 0;
- 	}
+	 	//deallocate null block
+	 	if (release_memory_block(NULL) != RTX_ERR) {
+	 		passed = 0;
+	 	}
 
- 	//deallocate address greater than the heap
- 	if (release_memory_block((void *)0x10008000) != RTX_ERR) {
- 		passed = 0;
- 	}
+	 	//deallocate address greater than the heap
+	 	if (release_memory_block((void *)0x10008000) != RTX_ERR) {
+	 		passed = 0;
+	 	}
 
- 	//deallocate address less than the heap
- 	if (release_memory_block((void *)0x10000000) != RTX_ERR) {
- 		passed = 0;
- 	}
+	 	//deallocate address less than the heap
+	 	if (release_memory_block((void *)0x10000000) != RTX_ERR) {
+	 		passed = 0;
+	 	}
 
- 	//deallocate address that is the end of a memory block
- 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)1) != RTX_ERR) {
- 		passed = 0;
- 	}
+	 	//deallocate address that is the end of a memory block
+	 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)1) != RTX_ERR) {
+	 		passed = 0;
+	 	}
 
-	//deallocate address that is the middle of a memory block
- 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)3) != RTX_ERR) {
- 		passed = 0;
- 	}
+		//deallocate address that is the middle of a memory block
+	 	if (release_memory_block((int *)mem_blks[0] - (uint32_t)3) != RTX_ERR) {
+	 		passed = 0;
+	 	}
 
- 	//deallocate the last held memory block
- 	if (release_memory_block(mem_blks[0]) == RTX_ERR) {
- 		passed = 0;
- 	}
+	 	//deallocate the last held memory block
+	 	if (release_memory_block(mem_blks[0]) == RTX_ERR) {
+	 		passed = 0;
+	 	}
 
- #ifdef DEBUG_0
- 	printf("testing memory blocks...%s \n", passed ? "passed" : "failed");
- #endif /* DEBUG_0 */
+	 #ifdef DEBUG_0
+	 	printf("testing memory blocks...%s \n", passed ? "passed" : "failed");
+	 #endif /* DEBUG_0 */
+		printTestResults(passed);
 
- 	release_processor();
+	 	release_processor();
+	 }
 }
 
 /**
@@ -186,5 +221,12 @@ tests:
 	-block all processes to ensure null is running
 	-block all user processes but one <- unblocked one will get called multiple times back to back
 
+	ideas for some proc tests:
+	one test proc that continuously requests memory till all is gone
+	one that verifies unique memory blocks are returns upon request
+	one test proc which requests, releases, and requests again gets the same memory block
+	one test proc which checks that null proc priority cannot be changed
+	one test proc that only requests one memory block and then releases processor
+	one test proc to use set_proc_priority to manipulate flow of procs
 	**investigate SVC interrupts
 */
