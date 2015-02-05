@@ -1,9 +1,9 @@
 /**
  * @file:   k_process.c
  * @brief:  process management C file
- * @author: Yiqing Huang
+ * @author: SE350 G017
  * @author: Thomas Reidemeister
- * @date:   2014/01/17
+ * @date:   2015/02/03
  * NOTE: The example code shows one way of implementing context switching.
  *       The code only has minimal sanity check. There is no stack overflow check.
  *       The implementation assumes only two simple user processes and NO HARDWARE INTERRUPTS.

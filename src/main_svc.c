@@ -1,8 +1,8 @@
 /**
  * @file:   main_svc.c
  * @brief:  main routine to start up the RTX and processes
- * @author: Yiqing Huang
- * @date:   2014/01/17
+ * @author: SE350 G017
+ * @date:   2015/02/03
  * NOTE: standard C library is not allowed in the final kernel code.
  *       A tiny printf function for embedded application development
  *       taken from http://www.sparetimelabs.com/tinyprintf/tinyprintf.php

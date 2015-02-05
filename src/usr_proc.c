@@ -1,8 +1,8 @@
 /**
  * @file:   usr_proc.c
  * @brief:  Two user processes: proc1 and proc2
- * @author: Yiqing Huang
- * @date:   2014/01/17
+ * @author: SE 350 G017
+ * @date:   2015/02/03
  * NOTE: Each process is in an infinite loop. Processes never terminate.
  */
 
@@ -33,20 +33,16 @@ int testing_priority = FALSE;
 void set_up_testing_statements() {
 
 	#ifdef DEBUG_0
-	printf("G017_test: START\n");
-	printf("G017_test: total %x tests\n", + NUM_TESTS);
+	printf("G017_test: START\n\r");
+	printf("G017_test: total %x tests\n\r", + NUM_TESTS);
 	#endif /* DEBUG_0 */
 }
 
-/**
- * @brief Formats the output of test cases
- * @return Nothing to return
- */
 void printTestResults(int outcome) {
 	if(testCounter > NUM_TESTS) {
 
 		#ifdef DEBUG_1
-		printf("Test: %x\n", testCounter);
+		printf("Test: %x\n\r", testCounter);
 		#endif /* DEBUG_1 */
 
 		testCounter++;
@@ -58,34 +54,30 @@ void printTestResults(int outcome) {
 	}
 
 	#ifdef DEBUG_0
-	printf("G017_test: test %x %s\n", testCounter, outcome == 1? "OK" : "FAIL");
+	printf("G017_test: test %x %s\n\r", testCounter, outcome == 1? "OK" : "FAIL");
 	#endif /* DEBUG_0 */
 
 	testCounter++;
 	if (testCounter > NUM_TESTS) {
 
 		#ifdef DEBUG_0
-		printf("G017_test: %x/%x tests OK\n", passedtest, NUM_TESTS);
+		printf("G017_test: %x/%x tests OK\n\r", passedtest, NUM_TESTS);
 		#endif /* DEBUG_0 */
 
 		if (passedtest!= NUM_TESTS) {
 
 			#ifdef DEBUG_0
-			printf("G017_test: %x/%x tests FAIL\n", (NUM_TESTS - passedtest),NUM_TESTS);
+			printf("G017_test: %x/%x tests FAIL\n\r", (NUM_TESTS - passedtest),NUM_TESTS);
 			#endif /* DEBUG_0 */
 
 		}
 
 		#ifdef DEBUG_0
-		printf("G017_test: END\n");
+		printf("G017_test: END\n\r");
 		#endif /* DEBUG_0 */
 	}
 }
 
-/**
- * @brief initializers the q_test_procs table
- * @return Nothing to return
- */
 void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
@@ -115,7 +107,7 @@ void null_proc(void)
 	while (1) {
 
 		#ifdef DEBUG_1
-		printf("null process running\n");
+		printf("null process running\n\r");
 		#endif /* DEBUG_1 */
 
 		release_processor();
@@ -129,7 +121,6 @@ void null_proc(void)
 void proc1(void)
 {
 	int i = 0;
-	int ret_val = 10;
 	while (1) {
 
 		void *blk = request_memory_block();
@@ -141,10 +132,10 @@ void proc1(void)
 			#endif /* DEBUG_1 */
 
 			printTestResults(TRUE);
-			ret_val = release_processor();
+			release_processor();
 
 			#ifdef DEBUG_1
-			printf("proc1: ret_val=%d\n", ret_val);
+			printf("proc1: ret_val=%d\n\r", ret_val);
 			#endif /* DEBUG_1 */
 		}
 
@@ -163,7 +154,6 @@ void proc1(void)
 void proc2(void)
 {
 	int i = 0;
-	int ret_val = 20;
 	while (1) {
 
 		void *blk = request_memory_block();
@@ -175,10 +165,10 @@ void proc2(void)
 			#endif /* DEBUG_1 */
 
 			printTestResults(TRUE);
-			ret_val = release_processor();
+			release_processor();
 
 			#ifdef DEBUG_1
-			printf("proc2: ret_val=%d\n", ret_val);
+			printf("proc2: ret_val=%d\n\r", ret_val);
 			#endif /* DEBUG_1 */
 		}
 
@@ -198,8 +188,8 @@ void memory_management_test(void)
 	while (1) {
 
 		//	allocate some blocks of memory
-	 	void *mem_blks[25];
-	 	int num_blks = 25;
+	 	void *mem_blks[3];
+	 	int num_blks = 3;
 	 	int passed = TRUE;
 		int i, j;
 
@@ -264,7 +254,7 @@ void memory_management_test(void)
 	 	}
 
 	 	#ifdef DEBUG_1
-	 	printf("testing memory blocks...%s \n", passed ? "passed" : "failed");
+	 	printf("testing memory blocks...%s \n\r", passed ? "passed" : "failed");
 	 	#endif /* DEBUG_1 */
 		printTestResults(passed);
 

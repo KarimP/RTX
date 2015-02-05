@@ -1,7 +1,7 @@
 /**
  * @brief: uart_polling.c, polling UART to send and receive data
- * @author: Yiqing Huang
- * @date: 2014/01/05
+ * @author: SE350 G017
+ * @date: 2015/02/03
  * NOTE: the code only handles UART0 for now. 
  */
 

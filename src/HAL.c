@@ -1,6 +1,6 @@
 /* @brief: HAL.c Hardware Abstraction Layer
- * @author: Yiqing Huang
- * @date: 2014/01/17
+ * @author: SE350 G017
+ * @date: 2015/02/03
  * NOTE: This file contains embedded assembly. 
  *       The code borrowed some ideas from ARM RL-RTX source code
  */

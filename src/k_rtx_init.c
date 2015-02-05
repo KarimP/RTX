@@ -1,8 +1,8 @@
 /**
  * @file:   k_rtx_init.c
  * @brief:  Kernel initialization C file
- * @auther: Yiqing Huang
- * @date:   2014/01/17
+ * @auther: SE350 G017
+ * @date:   2015/02/03
  */
 
 #include "k_rtx_init.h"
