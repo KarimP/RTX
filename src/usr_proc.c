@@ -38,10 +38,6 @@ void set_up_testing_statements() {
 	#endif /* DEBUG_0 */
 }
 
-/**		
- * @brief Formats the output of test cases		
- * @return Nothing to return		
- */
 void printTestResults(int outcome) {
 	if(testCounter > NUM_TESTS) {
 
@@ -82,44 +78,22 @@ void printTestResults(int outcome) {
 	}
 }
 
-/**		
- * @brief initializes the q_test_procs table		
- * @return Nothing to return		
- */
 void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
-		g_test_procs[i].m_pid=(U32)(i);
+		g_test_procs[i].m_pid=(U32)(i+1);
 		g_test_procs[i].m_priority=MEDIUM;
 		g_test_procs[i].m_stack_size=0x100;
 	}
-
-	g_test_procs[0].m_priority = 4;
-
-	g_test_procs[0].mpf_start_pc = &null_proc;
-	g_test_procs[1].mpf_start_pc = &proc1;
-	g_test_procs[2].mpf_start_pc = &proc2;
-	g_test_procs[3].mpf_start_pc = &memory_management_test;
-	g_test_procs[4].mpf_start_pc = &priority_test;
-	g_test_procs[5].mpf_start_pc = &preemption_check;
-	g_test_procs[6].mpf_start_pc = &proc6;
+	
+	g_test_procs[0].mpf_start_pc = &proc1;
+	g_test_procs[1].mpf_start_pc = &proc2;
+	g_test_procs[2].mpf_start_pc = &memory_management_test;
+	g_test_procs[3].mpf_start_pc = &priority_test;
+	g_test_procs[4].mpf_start_pc = &preemption_check;
+	g_test_procs[5].mpf_start_pc = &proc6;
 
 	set_up_testing_statements();
-}
-
-/**
- * @brief: null process
- */
-void null_proc(void)
-{
-	while (1) {
-
-		#ifdef DEBUG_1
-		printf("null process running\n\r");
-		#endif /* DEBUG_1 */
-
-		release_processor();
-	}
 }
 
 /**

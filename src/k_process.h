@@ -12,6 +12,7 @@
 
 #include "k_rtx.h"
 #include "k_process_queue.h"
+#include "k_usr_proc.h"
 
 /* ----- Definitions ----- */
 
@@ -29,5 +30,7 @@ extern void set_test_procs(void);      /* test process initial set up */
 
 extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
+
+//extern PROC_INIT g_proc_table[NUM_PROCS];
 
 #endif /* ! K_PROCESS_H_ */

@@ -16,6 +16,4 @@ void priority_test(void);
 void preemption_check(void);
 void proc6(void);
 
-void null_proc(void);
-
 #endif /* USR_PROC_H_ */

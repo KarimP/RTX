@@ -159,7 +159,7 @@ int k_set_process_priority(int process_id, int priority)
 		return RTX_ERR;
 	}
 
-	for (i = 0; i < NUM_TEST_PROCS; ++i) {
+	for (i = 0; i < NUM_PROCS; ++i) {
 		if (g_proc_table[i].m_pid == process_id) {
 			prev_priority = g_proc_table[i].m_priority;
 			g_proc_table[i].m_priority = priority;
@@ -199,7 +199,7 @@ int k_set_process_priority(int process_id, int priority)
 int k_get_process_priority(int process_id)
 {
 	int i;
-	for (i = 0; i < NUM_TEST_PROCS; ++i) {
+	for (i = 0; i < NUM_PROCS; ++i) {
 		if (g_proc_table[i].m_pid == process_id) {
 			return g_proc_table[i].m_priority;
 		}

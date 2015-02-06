@@ -26,7 +26,7 @@ typedef struct process_queue
 	PCB *last;
 } process_queue;
 
-extern PROC_INIT g_proc_table[NUM_TEST_PROCS];
+extern PROC_INIT g_proc_table[NUM_PROCS];
 
 void initialize_priority_queue(process_queue**);
 int enqueue_priority_queue(process_queue**, PCB*, int);

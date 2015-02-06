@@ -73,10 +73,10 @@ void memory_init(void)
 
 	/* allocate memory for pcb pointers   */
 	gp_pcbs = (PCB **)p_end;
-	p_end += NUM_TEST_PROCS * sizeof(PCB *);
+	p_end += NUM_PROCS * sizeof(PCB *);
 
 	//allocate for PCBs
-	for ( i = 0; i < NUM_TEST_PROCS; i++ ) {
+	for ( i = 0; i < NUM_PROCS; i++ ) {
 		gp_pcbs[i] = (PCB *)p_end;
 		p_end += sizeof(PCB);
 	}
@@ -269,6 +269,9 @@ int k_release_memory_block(void *p_mem_blk)
 		if (pcb != NULL) {
 			pcb->m_state = RDY;
 			enqueue_priority_queue(ready_queue, pcb, i);
+			if (i > k_get_process_priority(gp_current_process->m_pid)) {
+				k_release_processor();
+			}
 			break;
 		}
 	}
