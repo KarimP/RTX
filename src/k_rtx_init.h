@@ -11,7 +11,6 @@
 #include "k_rtx.h"
 
 /* Functions */
-
 void k_rtx_init(void);
 
 extern int k_release_processor(void);

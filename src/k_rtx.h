@@ -15,6 +15,7 @@
 
 #define LOWEST_PRIORITY 3
 #define HIGHEST_PRIORITY 0
+#define NUM_PRIORITIES 5
 
 #define NULL 0
 #define NUM_TEST_PROCS 6
@@ -42,7 +43,7 @@ typedef enum {NEW = 0, RDY, RUN, BLOCKED_ON_RESOURCE
 */
 typedef struct pcb
 {
-	struct pcb *mp_next;  /* next pcb, not used in this example */
+	struct pcb *next;  /* next pcb */
 	U32 *mp_sp;		/* stack pointer of the process */
 	U32 m_pid;		/* process id */
 	PROC_STATE_E m_state;   /* state of the process */

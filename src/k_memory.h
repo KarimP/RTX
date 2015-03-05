@@ -11,24 +11,22 @@
 #include "k_rtx.h"
 #include "k_queue.h"
 #include "k_process.h"
-#include "k_process_queue.h"
-
 
 /* ----- Definitions ----- */
 #define RAM_END_ADDR 0x10008000
 
-typedef queue* mem_q;
 typedef queue_node* mem_blk;
 
 /* ----- Variables ----- */
 /* This symbol is defined in the scatter file (see RVCT Linker User Guide) */
 extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;
+
+/* processor-related variables */
 extern PCB **gp_pcbs;
 extern PROC_INIT g_proc_table[NUM_PROCS];
 extern PCB *gp_current_process;
-
-extern process_queue **ready_queue;
-extern process_queue **blocked_queue;
+extern queue** ready_queue;
+extern queue** blocked_queue;
 
 /* ----- Functions ------ */
 void memory_init(void);

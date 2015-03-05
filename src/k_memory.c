@@ -13,18 +13,20 @@
 #endif /* ! DEBUG_0 */
 
 #define MEM_BLK_SIZE 128
-
 #define NUM_BLOCKS 20
 
 /* ----- Global Variables ----- */
-U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
-               /* The first stack starts at the RAM high address */
-   				/* stack grows down. Fully decremental stack */
+
+/* @brief The last allocated stack low address. 8 bytes aligned.
+ * 		  The first stack starts at the RAM high address and
+ *    	  stack grows down. Fully decremental stack.
+ */
+ U32 *gp_stack;
 
 /**
  * @brief: Start of the linked list of the memory blocks
  */
-mem_q heap_q;
+queue *mem_q;
 
 /**
  * @brief: Start of the heap allocated for memory blocks
@@ -33,7 +35,6 @@ U8 *p_end;
 
 /**
  * @brief: Initialize RAM as follows:
-
 0x10008000+---------------------------+ High Address
           |    Proc 1 STACK           |
           |---------------------------|
@@ -42,7 +43,7 @@ U8 *p_end;
           |                           |
           |        HEAP               |
           |                           |
-          |---------------------------|
+          |---------------------------|<--- p_end
           |        PCB 2              |
           |---------------------------|
           |        PCB 1              |
@@ -56,22 +57,21 @@ U8 *p_end;
           |       RTX  Image          |
           |                           |
 0x10000000+---------------------------+ Low Address
-
 */
+
 void memory_init(void)
 {
 	int i;
-
 	p_end = (U8 *)&Image$$RW_IRAM1$$ZI$$Limit;
 
 	#ifdef DEBUG_1
-	printf("pend = 0x%x \n\r", p_end);
+	printf("p_end = 0x%x \n\r", p_end);
 	#endif /* ! DEBUG_1 */
 
 	/* 4 bytes padding */
 	p_end += 4;
 
-	/* allocate memory for pcb pointers   */
+	/* allocate memory for pcb pointers */
 	gp_pcbs = (PCB **)p_end;
 	p_end += NUM_PROCS * sizeof(PCB *);
 
@@ -98,45 +98,44 @@ void memory_init(void)
 	}
 
 	//allocate memory for ready queue
-	ready_queue = (process_queue**)p_end;
+	ready_queue = (queue**)p_end;
 
 	#ifdef DEBUG_1
 	printf("Start of ready_queue array: 0x%x \n\r", ready_queue);
 	#endif /* ! DEBUG_1 */
 
-	p_end += (NUM_PRIORITIES) * sizeof(process_queue *);
+	p_end += (NUM_PRIORITIES) * sizeof(queue*);
 
 	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
-		ready_queue[i] = (process_queue *)p_end;
+		ready_queue[i] = (queue*)p_end;
 
 		#ifdef DEBUG_1
 		printf("ready_queue[%d]: 0x%x \n\r", i, ready_queue[i]);
 		#endif /* ! DEBUG_1 */
 
-		p_end += sizeof(process_queue);
+		p_end += sizeof(queue);
 	}
-	initialize_priority_queue(ready_queue);
+	init_priority_queue(ready_queue);
 
 	//allocate memory for blocked queue
-	blocked_queue = (process_queue**)p_end;
+	blocked_queue = (queue**)p_end;
 
 	#ifdef DEBUG_1
 	printf("Start of blocked_queue array: 0x%x \n\r", blocked_queue);
 	#endif /* ! DEBUG_1 */
 
-	p_end += NUM_PRIORITIES * sizeof(process_queue*);
+	p_end += NUM_PRIORITIES * sizeof(queue*);
 
 	for ( i = 0; i < NUM_PRIORITIES; i++ ) {
-		blocked_queue[i] = (process_queue *)p_end;
+		blocked_queue[i] = (queue *)p_end;
 
 		#ifdef DEBUG_1
 		printf("blocked_queue[%d]: 0x%x \n\r", i, blocked_queue[i]);
 		#endif /* ! DEBUG_1 */
 
-		p_end += sizeof(process_queue);
+		p_end += sizeof(queue);
 	}
-	initialize_priority_queue(blocked_queue);
-
+	init_priority_queue(blocked_queue);
 }
 
 /**
@@ -150,27 +149,27 @@ int setup_heap(void)
 	int i;
 
   	// allocate memory for heap memory queue
-	heap_q = (queue*)p_end;
-	p_end += sizeof(queue);//sizeof(mem_q) + sizeof(queue);
+	mem_q = (queue*)p_end;
+	p_end += sizeof(queue);
 
-	initialize_queue(heap_q);
 	//initialize memory linked list
-	blk = (queue_node*)p_end;
+	init_queue(mem_q);
+	blk = (mem_blk)p_end;
 
 	for (i = 0; i < NUM_BLOCKS; i++){
-		enqueue(heap_q, blk);
+		enqueue(mem_q, blk);
 		blk = (mem_blk)((char *)blk + MEM_BLK_SIZE + sizeof(queue_node));
 		counter++;
 	}
 
 	#ifdef DEBUG_1
 	printf("We have %d memory blocks\n\r", counter);
-	printf("heap_q->first = 0x%x \n\r", heap_q->first);
-	printf("heap_q->last = 0x%x \n\r", heap_q->last);
+	printf("mem_q->first = 0x%x \n\r", mem_q->first);
+	printf("mem_q->last = 0x%x \n\r", mem_q->last);
 	printf("gpstack b= 0x%x \n\r", gp_stack);
 	#endif /* ! DEBUG_1 */
 
-	if (heap_q->first == (mem_blk)p_end){
+	if (mem_q->first == (mem_blk)p_end){
 		return RTX_OK;
 	} else {
 		return RTX_ERR;
@@ -197,9 +196,9 @@ U32 *alloc_stack(U32 size_b)
 		--gp_stack;
 	}
 
-	// #ifdef DEBUG_1
-	//printf("gpstack = 0x%x \n\r", gp_stack);
-	// #endif /* ! DEBUG_1 */
+	#ifdef DEBUG_1
+	printf("gpstack = 0x%x \n\r", gp_stack);
+	#endif /* ! DEBUG_1 */
 
 	return sp;
 }
@@ -210,19 +209,18 @@ U32 *alloc_stack(U32 size_b)
  */
 void *k_request_memory_block(void)
 {
-	int process_priority;
-	mem_blk blk = dequeue(heap_q);
+	int process_priority = 0;
+	mem_blk blk = dequeue(mem_q);
 
 	#ifdef DEBUG_1
 	printf("k_request_memory_block: entering...\n\r");
 	#endif /* ! DEBUG_1 */
 
-	while (blk == NULL ) {
+	while (blk == NULL) {
 
 		process_priority = k_get_process_priority(gp_current_process->m_pid);
-		pop_queue(ready_queue, gp_current_process->m_pid, process_priority);
-
-		enqueue_priority_queue(blocked_queue, gp_current_process, process_priority);
+		remove_node(ready_queue[process_priority], &process_pid_compar, (void *) &gp_current_process->m_pid);
+		enqueue(blocked_queue[process_priority], (queue_node *)gp_current_process);
 
 		//set process state to BLOCKED_ON_RESOURCE ;
 		gp_current_process->m_state = BLOCKED_ON_RESOURCE;
@@ -231,7 +229,7 @@ void *k_request_memory_block(void)
 	}
 
 	#ifdef DEBUG_1
-	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
+	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nmem_q->first is: 0x%x \n\r\n\r", blk, blk + 1, mem_q->first);
 	#endif /* ! DEBUG_1 */
 
 	return blk + 1;
@@ -243,32 +241,40 @@ void *k_request_memory_block(void)
  */
 int k_release_memory_block(void *p_mem_blk)
 {
-	mem_blk rel_blk = (mem_blk)p_mem_blk - 1;
-	int i;
+	mem_blk blk = (mem_blk)p_mem_blk - 1;
+	int i = 0;
 	PCB *pcb = NULL;
 
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: releasing block @ 0x%x \n\r", p_mem_blk);
 	#endif /* ! DEBUG_1 */
 
-	int a = (rel_blk == NULL);
-	int b = ((U8 *)rel_blk < p_end);
-	int c = ((U8 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack);
-	int d = ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0);
+	int a = (blk == NULL);
+	
+	//make sure block is not below heap
+	int b = ((U8 *)blk < p_end);
+	
+	//make sure block doesn't touch stack
+	int c = ((U8 *)blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack); 
+	
+	//make sure block address matches an address that would be at the beginning of the block
+	int d = ((int)((U8 *)blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0); 
+	
 	if ( a || b || c || d ) {
 		return RTX_ERR;
 	}
 
-	if (enqueue(heap_q, rel_blk) != RTX_OK) {
+	if (enqueue(mem_q, blk) != RTX_OK) {
 		return RTX_ERR;
 	}
 
-	// removed highest priority blocked process that requested memory previously
+	// remove highest priority blocked process that requested memory previously
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
-		pcb = dequeue_priority_queue(blocked_queue, i);
+		pcb = (PCB *)dequeue(blocked_queue[i]);
 		if (pcb != NULL) {
 			pcb->m_state = RDY;
-			enqueue_priority_queue(ready_queue, pcb, i);
+			enqueue(ready_queue[i], (queue_node *)pcb);
+
 			if (i > k_get_process_priority(gp_current_process->m_pid)) {
 				k_release_processor();
 			}
@@ -277,7 +283,7 @@ int k_release_memory_block(void *p_mem_blk)
 	}
 
 	#ifdef DEBUG_1
-	printf("k_release_memory_block: exiting...\n\rheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\r\n\r", heap_q->first, heap_q->first->next);
+	printf("k_release_memory_block: exiting...\n\rmem_q->first is: 0x%x \nmem_q->first->next is: 0x%x \n\r\n\r", mem_q->first, mem_q->first->next);
 	#endif /* ! DEBUG_1 */
 
 	return RTX_OK;

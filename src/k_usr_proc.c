@@ -12,9 +12,6 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
-/* initialization table item */
-extern PROC_INIT g_proc_table[NUM_PROCS];
-
 void k_set_procs(void) {
 	//set null process
 	g_proc_table[0].m_pid=(U32)(0);

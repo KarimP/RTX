@@ -10,7 +10,11 @@
 
 #include "k_rtx.h"
 
+/* System Processes */
 void null_proc(void);
 void k_set_procs(void);
+
+/* initialization table item */
+extern PROC_INIT g_proc_table[NUM_PROCS];
 
 #endif /* K_USR_PROC_H_ */
