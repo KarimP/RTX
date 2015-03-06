@@ -452,9 +452,9 @@
               <FilePath>.\src\k_queue.c</FilePath>
             </File>
             <File>
-              <FileName>k_usr_proc.c</FileName>
+              <FileName>k_proc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\k_usr_proc.c</FilePath>
+              <FilePath>.\src\k_proc.c</FilePath>
             </File>
           </Files>
         </Group>

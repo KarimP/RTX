@@ -13,7 +13,7 @@ void proc1(void);
 void proc2(void);
 void memory_management_test(void);
 void priority_test(void);
-void preemption_check(void);
-void proc6(void);
+void preemption_test(void);
+void block_test(void);
 
 #endif /* USR_PROC_H_ */

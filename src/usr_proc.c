@@ -14,9 +14,6 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
-#define TRUE 1
-#define FALSE 0
-
 #define PROC_MEM_PID 3
 #define PROC_PRIORITY_PID 4
 #define PROC_PREEMPTION_PID 5
@@ -27,11 +24,11 @@ PROC_INIT g_test_procs[NUM_TEST_PROCS];
 int testCounter = 1;
 int passedtest = 0;
 
+//pre-emption test flags
 int process4_preempted = FALSE;
 int testing_priority = FALSE;
 
 void set_up_testing_statements() {
-
 	#ifdef DEBUG_0
 	printf("G017_test: START\n\r");
 	printf("G017_test: total %x tests\n\r", + NUM_TESTS);
@@ -90,8 +87,8 @@ void set_test_procs() {
 	g_test_procs[1].mpf_start_pc = &proc2;
 	g_test_procs[2].mpf_start_pc = &memory_management_test;
 	g_test_procs[3].mpf_start_pc = &priority_test;
-	g_test_procs[4].mpf_start_pc = &preemption_check;
-	g_test_procs[5].mpf_start_pc = &proc6;
+	g_test_procs[4].mpf_start_pc = &preemption_test;
+	g_test_procs[5].mpf_start_pc = &block_test;
 
 	set_up_testing_statements();
 }
@@ -103,7 +100,7 @@ void set_test_procs() {
 void proc1(void)
 {
 	int i = 0;
-	while (1) {
+	while (TRUE) {
 
 		void *blk = request_memory_block();
 
@@ -136,7 +133,7 @@ void proc1(void)
 void proc2(void)
 {
 	int i = 0;
-	while (1) {
+	while (TRUE) {
 
 		void *blk = request_memory_block();
 
@@ -167,7 +164,7 @@ void proc2(void)
  */
 void memory_management_test(void)
 {
-	while (1) {
+	while (TRUE) {
 
 		//	allocate some blocks of memory
 	 	void *mem_blks[3];
@@ -245,7 +242,7 @@ void memory_management_test(void)
  */
 void priority_test(void)
 {
-	while (1) {
+	while (TRUE) {
 
 		void *blk = request_memory_block();
 		int passed = TRUE;
@@ -256,7 +253,7 @@ void priority_test(void)
 			passed = FALSE;
 		}
 
-		//make sure it actually didn't end up changed the null proc priority
+		//make sure it actually didn't end up changing the null proc priority
 		if (get_process_priority(0) != LOWEST + 1) {
 			passed = FALSE;
 		}
@@ -299,9 +296,9 @@ void priority_test(void)
 /**
  * @brief: Process 5: check if pre-emption occured with pid 4
  */
-void preemption_check(void)
+void preemption_test(void)
 {
-	while (1) {
+	while (TRUE) {
 
 		void *blk = request_memory_block();
 		int passed = TRUE;
@@ -331,10 +328,9 @@ void preemption_check(void)
 /**
  * @brief: Process 6: Allocates all blocks of memory
 */
-void proc6(void)
+void block_test(void)
 {
-
-	while (1) {
+	while (TRUE) {
 		request_memory_block();
 	}
 }

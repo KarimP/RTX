@@ -9,6 +9,8 @@
 #define RTX_ERR -1
 #define RTX_OK 0
 #define NULL 0
+#define TRUE 1
+#define FALSE 0
 #define NUM_TEST_PROCS 6
 
 /* Process Priority. The bigger the number is, the lower the priority is*/
