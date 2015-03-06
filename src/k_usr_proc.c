@@ -28,7 +28,7 @@ void k_set_procs(void) {
  */
 void null_proc(void)
 {
-	while (1) {
+	while (TRUE) {
 
 		#ifdef DEBUG_1
 		printf("null process running\n\r");

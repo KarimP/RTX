@@ -11,6 +11,9 @@
 #include <stdint.h>	
 #include "uart_def.h"
 
+#define ON 1
+#define OFF 0
+
 /* The following macros are from NXP uart.h */
 /*
 #define IER_RBR		0x01

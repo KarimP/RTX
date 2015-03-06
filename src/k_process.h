@@ -15,6 +15,7 @@
 #include "k_usr_proc.h"
 #include "k_queue.h"
 #include "k_message.h"
+#include "k_memory.h"
 
 /* ----- Definitions ----- */
 
@@ -34,9 +35,6 @@ PCB* get_pcb_from_pid(int);
 extern U32 *alloc_stack(U32 size_b);   /* allocate stack for a process */
 extern void __rte(void);               /* pop exception stack frame */
 extern void set_test_procs(void);      /* test process initial set up */
-
-extern void *k_request_memory_block(void);
-extern int k_release_memory_block(void *);
 
 extern process_queue **ready_queue;
 extern process_queue **blocked_queue;

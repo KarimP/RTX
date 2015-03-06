@@ -24,6 +24,9 @@
 #define ON 1
 #define OFF 0
 
+#define TRUE 1
+#define FALSE 0
+
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */
 #else

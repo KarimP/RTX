@@ -40,7 +40,7 @@ void process_init()
 {
 	int i;
 	U32 *sp;
-	
+
 	//get kernel procs
 	k_set_procs();
 
@@ -153,13 +153,13 @@ int process_switch(PCB *p_pcb_old)
 			__set_MSP((U32) gp_current_process->mp_sp); //switch to the new proc's stack
 		} else {
 			priority = k_get_process_priority(gp_current_process->m_pid);
-			
+
 			pop_queue(ready_queue, gp_current_process->m_pid, priority);
 			gp_current_process->mp_next = ready_queue[priority]->first;
 			ready_queue[priority]->first = gp_current_process;
-			
+
 			gp_current_process = p_pcb_old; // revert back to the old proc on error
-			
+
 			return RTX_ERR;
 		}
 	}
@@ -193,7 +193,8 @@ int k_release_processor(void)
 
 // Message Queue implementation
 
-PCB* get_pcb_from_pid(int process_id) {
+PCB* get_pcb_from_pid(int process_id)
+{
 	PCB* pcb;
 	int i;
 	for (i=0;i < NUM_PROCS; i++){
@@ -221,14 +222,15 @@ void ready_process(PCB *proc, int pid)
     enqueue_priority_queue(ready_queue, proc, proc_priority);
 }
 
-int k_send_message(int receiving_pid, void *message_envelope){
+int k_send_message(int receiving_pid, void *message_envelope)
+{
 	PCB* receiving_proc;
 	msg_Node *msg;
 	if (message_envelope == NULL)
 	{
 		return RTX_ERR;
 	}
-	
+
 	atomic(ON);
 
 	msg = k_request_memory_block();
@@ -240,21 +242,22 @@ int k_send_message(int receiving_pid, void *message_envelope){
 	msg->msgbuf = message_envelope;
 
 	enqueue(receiving_proc->msg_q, (queue_node*) msg);
-	
+
 	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
 		//set state to ready, and move from blocked queue to ready queue
         ready_process(receiving_proc, receiving_pid);
-		
+
         atomic(OFF);
 		k_release_processor();
 		atomic(ON);
 	}
-	
+
 	atomic(OFF);
 	return RTX_OK;
 }
 
-int k_send_delayed_message(int process_id, void *message_envelope, int delay){
+int k_send_delayed_message(int process_id, void *message_envelope, int delay)
+{
 	msg_Node* envelope = (msg_Node*) message_envelope;
 	if (message_envelope == NULL)
 	{
@@ -263,29 +266,44 @@ int k_send_delayed_message(int process_id, void *message_envelope, int delay){
 	//envelope->expireTime = getCurrentTime() + delay;
 	//envelope->d_pid = process_id;
 	enqueue(delayed_queue, (queue_node*) envelope);
-	
+
 	return RTX_OK;
 }
 
-void *k_receive_message(int *sender_id){
-	msg_Node* msg;
-	void *msgbuf;
+void *get_message(int *sender_id, int block)
+{
+	msg_Node* msg = NULL;
+	void *msgbuf = NULL;
+
 	atomic(ON);
-	
-	while(isEmpty(gp_current_process->msg_q)){
+
+	while(isEmpty(gp_current_process->msg_q) && block) {
         block_process(gp_current_process, gp_current_process->m_pid, BLOCKED_ON_RECEIVE);
-		
+
         atomic(OFF);
 		k_release_processor();
 		atomic(ON);
 	}
-    
-	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
-	*sender_id = (int)msg->s_pid;
-	msgbuf = msg->msgbuf;
 
-	k_release_memory_block((void *) msg);
-	atomic(OFF);    
-    
+	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
+
+	if (msg != NULL) {
+		*sender_id = (int)msg->s_pid;
+		msgbuf = msg->msgbuf;
+		k_release_memory_block((void *) msg);
+	}
+
+	atomic(OFF);
+
 	return msgbuf;
+}
+
+void *k_receive_message(int *sender_id)
+{
+	return get_message(sender_id, TRUE);
+}
+
+void *k_receive_message_non_block(int *sender_id)
+{
+	return get_message(sender_id, FALSE);
 }
