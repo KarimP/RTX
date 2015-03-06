@@ -55,7 +55,7 @@ void process_init()
 		g_proc_table[i].mpf_start_pc = g_test_procs[i-1].mpf_start_pc;
 
 		//change priority to lowest if its out of bounds so that the user process runs
-		if (g_test_procs[i-1].m_priority < LOWEST_PRIORITY || g_test_procs[i-1].m_priority > HIGHEST_PRIORITY) {
+		if (g_test_procs[i-1].m_priority > LOWEST_PRIORITY || g_test_procs[i-1].m_priority < HIGHEST_PRIORITY) {
 			g_test_procs[i-1].m_priority = LOWEST_PRIORITY;
 		}
 		g_proc_table[i].m_priority = g_test_procs[i-1].m_priority;
