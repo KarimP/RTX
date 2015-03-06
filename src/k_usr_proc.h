@@ -9,6 +9,7 @@
 #define K_USR_PROC_H
 
 #include "k_rtx.h"
+#include "k_process.h"
 
 void null_proc(void);
 void k_set_procs(void);

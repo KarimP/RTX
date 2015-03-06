@@ -26,6 +26,8 @@
 PCB **gp_pcbs;                  /* array of pcbs */
 PCB *gp_current_process = NULL; /* always point to the current RUN process */
 
+queue *delayed_queue;
+
 /* process initialization table */
 PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
@@ -74,6 +76,16 @@ void process_init()
 		(gp_pcbs[i])->mp_sp = sp;
 
 		enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
+	}
+}
+
+void atomic (int toggle)
+{
+	if (toggle) {
+		__disable_irq();
+	}
+	else {
+		__enable_irq();
 	}
 }
 
@@ -179,6 +191,101 @@ int k_release_processor(void)
 	return RTX_OK;
 }
 
-void revert_to_current_process(void) {
+// Message Queue implementation
+
+PCB* get_pcb_from_pid(int process_id) {
+	PCB* pcb;
+	int i;
+	for (i=0;i < NUM_PROCS; i++){
+		if (g_proc_table[i].m_pid == process_id && process_id > 0) {
+			pcb = gp_pcbs[i];
+		}
+	}
+
+	return pcb;
+}
+
+void block_process(PCB *proc, int pid, PROC_STATE_E blocked_status)
+{
+    int proc_priority = k_get_process_priority(pid);
+    proc->m_state = blocked_status;
+    pop_queue(ready_queue, pid, proc_priority);
+    enqueue_priority_queue(blocked_queue, proc, proc_priority);
+}
+
+void ready_process(PCB *proc, int pid)
+{
+    int proc_priority = k_get_process_priority(pid);
+    proc->m_state = RDY;
+    pop_queue(blocked_queue, pid, proc_priority);
+    enqueue_priority_queue(ready_queue, proc, proc_priority);
+}
+
+int k_send_message(int receiving_pid, void *message_envelope){
+	PCB* receiving_proc;
+	msg_Node *msg;
+	if (message_envelope == NULL)
+	{
+		return RTX_ERR;
+	}
 	
+	atomic(ON);
+
+	msg = k_request_memory_block();
+	receiving_proc = get_pcb_from_pid(receiving_pid);
+
+	msg->next = NULL;
+	msg->d_pid = receiving_pid;
+	msg->s_pid = gp_current_process->m_pid;
+	msg->msgbuf = message_envelope;
+
+	enqueue(receiving_proc->msg_q, (queue_node*) msg);
+	
+	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
+		//set state to ready, and move from blocked queue to ready queue
+        ready_process(receiving_proc, receiving_pid);
+		
+        atomic(OFF);
+		k_release_processor();
+		atomic(ON);
+	}
+	
+	atomic(OFF);
+	return RTX_OK;
+}
+
+int k_send_delayed_message(int process_id, void *message_envelope, int delay){
+	msg_Node* envelope = (msg_Node*) message_envelope;
+	if (message_envelope == NULL)
+	{
+		return RTX_ERR;
+	}
+	//envelope->expireTime = getCurrentTime() + delay;
+	//envelope->d_pid = process_id;
+	enqueue(delayed_queue, (queue_node*) envelope);
+	
+	return RTX_OK;
+}
+
+void *k_receive_message(int *sender_id){
+	msg_Node* msg;
+	void *msgbuf;
+	atomic(ON);
+	
+	while(isEmpty(gp_current_process->msg_q)){
+        block_process(gp_current_process, gp_current_process->m_pid, BLOCKED_ON_RECEIVE);
+		
+        atomic(OFF);
+		k_release_processor();
+		atomic(ON);
+	}
+    
+	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
+	*sender_id = (int)msg->s_pid;
+	msgbuf = msg->msgbuf;
+
+	k_release_memory_block((void *) msg);
+	atomic(OFF);    
+    
+	return msgbuf;
 }

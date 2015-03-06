@@ -97,6 +97,7 @@ void memory_init(void)
 		--gp_stack;
 	}
 	
+	// message queue for PCB
 	for ( i = 0; i < NUM_PROCS; i++ ) {
 		gp_pcbs[i]->msg_q = (queue *)p_end;
 		p_end += sizeof(queue);
@@ -142,6 +143,11 @@ void memory_init(void)
 	}
 	initialize_priority_queue(blocked_queue);
 
+	//allocate memory for delayed_queue
+	delayed_queue = (queue*)p_end;
+    p_end += sizeof(queue);
+
+	initialize_queue(delayed_queue);
 }
 
 /**

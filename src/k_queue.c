@@ -56,3 +56,16 @@ queue_node *dequeue(queue *q)
 
     return node;
 }
+
+int size(queue *q)
+{
+    queue_node *node;
+    int size;
+	for (size = 0, node=q->first; node != NULL; node = node->next, ++size){}
+    return size;
+}
+
+int isEmpty(queue *q)
+{
+    return (q->first == NULL);
+}

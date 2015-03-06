@@ -12,4 +12,5 @@
 *.dep
 *.tra
 *.__i
+*.iex
 context_switching.htm

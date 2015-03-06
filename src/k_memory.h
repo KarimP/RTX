@@ -12,7 +12,7 @@
 #include "k_queue.h"
 #include "k_process.h"
 #include "k_process_queue.h"
-
+#include "k_message.h"
 
 /* ----- Definitions ----- */
 #define RAM_END_ADDR 0x10008000
@@ -29,6 +29,8 @@ extern PCB *gp_current_process;
 
 extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
+
+extern queue *delayed_queue;
 
 /* ----- Functions ------ */
 void memory_init(void);

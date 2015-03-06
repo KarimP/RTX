@@ -13,14 +13,13 @@
 #include "k_rtx.h"
 #include "k_queue.h"
 
-typedef struct msg_t
+typedef struct msg_Node
 {
-	int mtype;              /* user defined message type */
-	char mtext[1];          /* body of the message */
-	struct msg_t *next;
+	struct msg_Node *next;
 	U32 s_pid;		/* sender id */
 	U32 d_pid;		/* destination id */
-} msg_t;
+	void *msgbuf;
+} msg_Node;
 
 
 //int send_message (uint32 receiving_pid, msg_t *env);

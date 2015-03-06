@@ -11,6 +11,12 @@
 #define NULL 0
 #define NUM_TEST_PROCS 6
 
+#define MEM_BLK_SIZE 128
+
+/* Message Types */
+#define DEFAULT 0
+#define KCD_REG 1
+
 /* Process Priority. The bigger the number is, the lower the priority is*/
 #define HIGH    0
 #define MEDIUM  1
@@ -28,6 +34,13 @@ typedef struct proc_init
 	int m_stack_size;       /* size of stack in words */
 	void (*mpf_start_pc) ();/* entry point of the process */
 } PROC_INIT;
+
+/* message buffer */
+typedef struct msgbuf
+{
+	int mtype;              /* user defined message type */
+	char mtext[MEM_BLK_SIZE - sizeof(int)];          /* body of the message */
+} MSG_BUF;
 
 /* ----- RTX User API ----- */
 #define __SVC_0  __svc_indirect(0)
@@ -58,5 +71,14 @@ extern int _get_process_priority(U32 p_func, int pid) __SVC_0;
 extern int k_set_process_priority(int pid, int prio);
 #define set_process_priority(pid, prio) _set_process_priority((U32)k_set_process_priority, pid, prio)
 extern int _set_process_priority(U32 p_func, int pid, int prio) __SVC_0;
+
+/* IPC Management */
+extern int k_send_message(int pid, void *p_msg);
+#define send_message(pid, p_msg) _send_message((U32)k_send_message, pid, p_msg)
+extern int _send_message(U32 p_func, int pid, void *p_msg) __SVC_0;
+
+extern void *k_receive_message(int *p_pid);
+#define receive_message(p_pid) _receive_message((U32)k_receive_message, p_pid)
+extern void *_receive_message(U32 p_func, void *p_pid) __SVC_0;
 
 #endif /* !RTX_H_ */

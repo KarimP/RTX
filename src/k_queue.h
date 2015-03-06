@@ -25,5 +25,7 @@ typedef struct queue
 void initialize_queue(queue*);
 int enqueue(queue*, queue_node*);
 queue_node *dequeue(queue*);
+int size(queue*);
+int isEmpty(queue*);
 
 #endif /* ! K_QUEUE_H_ */

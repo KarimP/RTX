@@ -17,6 +17,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define PROC1_PID 1
+#define PROC2_PID 2
 #define PROC_MEM_PID 3
 #define PROC_PRIORITY_PID 4
 #define PROC_PREEMPTION_PID 5
@@ -103,29 +105,43 @@ void set_test_procs() {
 void proc1(void)
 {
 	int i = 0;
+    int sender_id;
+	MSG_BUF *msg;
 	while (1) {
 
-		void *blk = request_memory_block();
+		// void *blk = request_memory_block();
 
-		if ( i != 0 && i%5 == 0 ) {
+		// if ( i != 0 && i%5 == 0 ) {
 
-			#ifdef DEBUG_1
-			uart0_put_string("\n\r");
-			#endif /* DEBUG_1 */
+		// 	#ifdef DEBUG_1
+		// 	uart0_put_string("\n\r");
+		// 	#endif /* DEBUG_1 */
 
-			printTestResults(TRUE);
-			release_processor();
+		// 	printTestResults(TRUE);
+		// 	release_processor();
 
-			#ifdef DEBUG_1
-			printf("proc1: ret_val=%d\n\r", ret_val);
-			#endif /* DEBUG_1 */
+		// 	#ifdef DEBUG_1
+		// 	printf("proc1: ret_val=%d\n\r", ret_val);
+		// 	#endif /* DEBUG_1 */
+		// }
+
+		// #ifdef DEBUG_1
+		// uart0_put_char('A' + i%26);
+		// #endif /* DEBUG_1 */
+
+		// i++;
+		
+        msg = (MSG_BUF *)receive_message(&sender_id);
+
+		printf("message received from sender: %d Message: ", sender_id);
+		for (i = 0; i < 4; ++i) {
+			printf("%c", msg->mtext[i]);
 		}
-
-		#ifdef DEBUG_1
-		uart0_put_char('A' + i%26);
-		#endif /* DEBUG_1 */
-
-		i++;
+        uart0_put_string("\n\r");
+        release_memory_block(msg);
+        
+        printTestResults(TRUE);
+        release_processor();
 	}
 }
 
@@ -136,29 +152,50 @@ void proc1(void)
 void proc2(void)
 {
 	int i = 0;
+	MSG_BUF *msg;
+	int sender_id;
 	while (1) {
 
 		void *blk = request_memory_block();
 
-		if ( i != 0 && i%5 == 0 ) {
+		// if ( i != 0 && i%5 == 0 ) {
 
-			#ifdef DEBUG_1
-			uart0_put_string("\n\r");
-			#endif /* DEBUG_1 */
+		// 	#ifdef DEBUG_1
+		// 	uart0_put_string("\n\r");
+		// 	#endif /* DEBUG_1 */
 
-			printTestResults(TRUE);
-			release_processor();
+		// 	printTestResults(TRUE);
+		// 	release_processor();
 
-			#ifdef DEBUG_1
-			printf("proc2: ret_val=%d\n\r", ret_val);
-			#endif /* DEBUG_1 */
-		}
+		// 	#ifdef DEBUG_1
+		// 	printf("proc2: ret_val=%d\n\r", ret_val);
+		// 	#endif /* DEBUG_1 */
+		// }
 
-		#ifdef DEBUG_1
-		uart0_put_char('0' + i%10);
-		#endif /* DEBUG_1 */
+		// #ifdef DEBUG_1
+		// uart0_put_char('0' + i%10);
+		// #endif /* DEBUG_1 */
 
-		i++;
+		// i++;
+		//msg = (MSG_BUF *)receive_message(&sender_id);
+
+		//printf("message received from sender: %d Message: ", sender_id);
+		//for (i = 0; i < 4; ++i) {
+		//	printf("%c", msg->mtext[i]);
+		//}
+        //printf("\n");
+        
+        msg = (MSG_BUF *)request_memory_block();
+		msg->mtype = DEFAULT;
+		msg->mtext[0] = 'h';
+		msg->mtext[1] = 'e';
+		msg->mtext[2] = 'l';
+		msg->mtext[3] = 'l';
+
+		send_message(PROC1_PID, msg);
+        
+        printTestResults(TRUE);
+        release_processor();
 	}
 }
 
