@@ -452,11 +452,6 @@
               <FilePath>.\src\k_queue.c</FilePath>
             </File>
             <File>
-              <FileName>k_process_queue.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\k_process_queue.c</FilePath>
-            </File>
-            <File>
               <FileName>k_usr_proc.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\k_usr_proc.c</FilePath>
