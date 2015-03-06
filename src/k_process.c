@@ -50,9 +50,9 @@ void process_init()
 	set_test_procs();
 
 	for ( i = NUM_K_PROCS; i < NUM_PROCS; i++ ) {
-		g_proc_table[i].m_pid = g_test_procs[i-1].m_pid;
-		g_proc_table[i].m_stack_size = g_test_procs[i-1].m_stack_size;
-		g_proc_table[i].mpf_start_pc = g_test_procs[i-1].mpf_start_pc;
+		g_proc_table[i].m_pid = g_test_procs[i-NUM_K_PROCS].m_pid;
+		g_proc_table[i].m_stack_size = g_test_procs[i-NUM_K_PROCS].m_stack_size;
+		g_proc_table[i].mpf_start_pc = g_test_procs[i-NUM_K_PROCS].mpf_start_pc;
 
 		//change priority to lowest if its out of bounds so that the user process runs
 		if (g_test_procs[i-1].m_priority > LOWEST_PRIORITY || g_test_procs[i-1].m_priority < HIGHEST_PRIORITY) {

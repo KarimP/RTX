@@ -5,8 +5,8 @@
  * @date:   2014/01/17
  */
 
-#ifndef K_USR_PROC_H_
-#define K_USR_PROC_H
+#ifndef K_PROC_H_
+#define K_PROC_H
 
 #include "k_rtx.h"
 #include "k_process.h"
@@ -18,4 +18,4 @@ void k_set_procs(void);
 /* initialization table item */
 extern PROC_INIT g_proc_table[NUM_PROCS];
 
-#endif /* K_USR_PROC_H_ */
+#endif /* K_PROC_H_ */

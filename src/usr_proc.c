@@ -235,11 +235,7 @@ void memory_management_test(void)
 	 		passed = FALSE;
 	 	}
 
-	 	#ifdef DEBUG_1
-	 	printf("testing memory blocks...%s \n\r", passed ? "passed" : "failed");
-	 	#endif /* DEBUG_1 */
 		printTestResults(passed);
-
 	 	release_processor();
 	 }
 }

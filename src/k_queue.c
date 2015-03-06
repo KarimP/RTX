@@ -51,15 +51,13 @@ int enqueue(queue *q, queue_node *node)
  */
 int reverse_enqueue(queue *q, queue_node *node)
 {
-    queue_node *first_node = q->first;
-
     //node is already in queue - return error
     if (node == NULL || node == q->last) {
         return RTX_ERR;
     }
 
+    node->next = q->first;
     q->first = node;
-    node->next = first_node;
 
     if (q->last == NULL) {
         q->last = node;
@@ -137,7 +135,7 @@ void rotate_queue(queue* q)
 /**
  * @brief Removes specified queue_node from the queue
  * @param compar - a function pointer which will take in a queue_node* and a void *property value
- *               and return non-zero if queue_node's property has that value and 0 if it doesn't
+ *               and return non-zero if queue_node's property has that value or 0 if it doesn't
  * @return Returns the queue_node* or NULL otherwise
  */
 queue_node *remove_node(queue *q, int (*compar)(const queue_node*, const void *), void *property)

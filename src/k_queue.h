@@ -10,7 +10,6 @@
 typedef struct queue_node
 {
     struct queue_node *next;
-    //void * data //= next + 1 for mem, PCB for process
 } queue_node;
 
 

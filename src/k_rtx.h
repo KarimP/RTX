@@ -33,7 +33,8 @@ typedef unsigned char U8;
 typedef unsigned int U32;
 
 /* process states, note we only assume three states in this example */
-typedef enum {NEW = 0, RDY, RUN, BLOCKED_ON_RESOURCE
+typedef enum {
+	NEW = 0, RDY, RUN, BLOCKED_ON_RESOURCE
 } PROC_STATE_E;
 
 /*
