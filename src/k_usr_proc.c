@@ -27,7 +27,7 @@ void null_proc(void)
 {
 	while (1) {
 
-		#ifdef DEBUG_1
+		#ifdef DEBUG_0
 		printf("null process running\n\r");
 		#endif /* DEBUG_1 */
 
