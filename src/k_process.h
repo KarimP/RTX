@@ -13,6 +13,7 @@
 #include "k_rtx.h"
 #include "k_process_queue.h"
 #include "k_usr_proc.h"
+#include "k_queue.h"
 
 /* ----- Definitions ----- */
 

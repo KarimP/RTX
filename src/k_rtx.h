@@ -46,6 +46,7 @@ typedef struct pcb
 	U32 *mp_sp;		/* stack pointer of the process */
 	U32 m_pid;		/* process id */
 	PROC_STATE_E m_state;   /* state of the process */
+	struct queue *msg_q;
 } PCB;
 
 /* initialization table item */

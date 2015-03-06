@@ -96,6 +96,11 @@ void memory_init(void)
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
 		--gp_stack;
 	}
+	
+	for ( i = 0; i < NUM_PROCS; i++ ) {
+		gp_pcbs[i]->msg_q = (queue *)p_end;
+		p_end += sizeof(queue);
+	}
 
 	//allocate memory for ready queue
 	ready_queue = (process_queue**)p_end;
