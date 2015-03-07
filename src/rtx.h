@@ -10,12 +10,42 @@
 #define RTX_OK 0
 #define NULL 0
 #define NUM_TEST_PROCS 6
+#define NUM_PROCS 10
+
+//common status values
+#define NULL 0
+#define ON 1
+#define OFF 0
+#define TRUE 1
+#define FALSE 0
 
 #define MEM_BLK_SIZE 128
 
-/* Message Types */
+ /* Message Types */
 #define DEFAULT 0
 #define KCD_REG 1
+#define UART_INPUT 2
+
+#define CRT_DISPLAY 4
+#define CRT_ON 5
+#define CRT_OFF 6
+#define CRT_REG 7
+ 
+#define CLOCK_REG 3
+
+/* Process IDs */
+#define PID_NULL 0
+#define PID_P1   1
+#define PID_P2   2
+#define PID_P3   3
+#define PID_P4   4
+#define PID_P5   5
+#define PID_P6   6
+#define PID_CLOCK        11
+#define PID_KCD          7
+#define PID_CRT          8
+#define PID_TIMER_IPROC  10
+#define PID_UART_IPROC   9
 
 /* Process Priority. The bigger the number is, the lower the priority is*/
 #define HIGH    0
@@ -53,10 +83,14 @@ extern int k_release_processor(void);
 #define release_processor() _release_processor((U32)k_release_processor)
 extern int __SVC_0 _release_processor(U32 p_func);
 
+extern void *k_non_blocking_request_memory_block(void);
+#define non_blocking_request_memory_block() _non_blocking_request_memory_block((U32)k_non_blocking_request_memory_block)
+extern void *_non_blocking_request_memory_block(U32 p_func) __SVC_0;
+/* __SVC_0 can also be put at the end of the function declaration */
+
 extern void *k_request_memory_block(void);
 #define request_memory_block() _request_memory_block((U32)k_request_memory_block)
 extern void *_request_memory_block(U32 p_func) __SVC_0;
-/* __SVC_0 can also be put at the end of the function declaration */
 
 extern int k_release_memory_block(void *);
 #define release_memory_block(p_mem_blk) _release_memory_block((U32)k_release_memory_block, p_mem_blk)

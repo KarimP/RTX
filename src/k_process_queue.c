@@ -1,5 +1,7 @@
 #include "k_process_queue.h"
 
+extern PCB *gp_current_process;
+
 process_queue **ready_queue;
 process_queue **blocked_queue;
 

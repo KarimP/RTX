@@ -161,7 +161,7 @@
             <UseTargetDll>1</UseTargetDll>
             <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
-            <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
+            <UpdateFlashBeforeDebugging>0</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
             <DriverSelection>4096</DriverSelection>
           </Flash1>
@@ -421,6 +421,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\main_svc.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_irq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\uart_irq.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -457,19 +462,29 @@
               <FilePath>.\src\k_process_queue.c</FilePath>
             </File>
             <File>
-              <FileName>k_usr_proc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\k_usr_proc.c</FilePath>
-            </File>
-            <File>
               <FileName>timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\timer.c</FilePath>
             </File>
             <File>
-              <FileName>k_irq.c</FileName>
+              <FileName>irq.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\k_irq.c</FilePath>
+              <FilePath>.\src\irq.c</FilePath>
+            </File>
+            <File>
+              <FileName>crt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\crt.c</FilePath>
+            </File>
+            <File>
+              <FileName>kcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\kcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>k_message.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\k_message.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -480,6 +495,11 @@
               <FileName>usr_proc.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\usr_proc.c</FilePath>
+            </File>
+            <File>
+              <FileName>os_proc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\os_proc.c</FilePath>
             </File>
           </Files>
         </Group>

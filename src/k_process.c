@@ -34,6 +34,10 @@ queue *delayed_queue;
 PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 
+//process queues
+extern process_queue **ready_queue;
+extern process_queue **blocked_queue;
+
 /**
  * @biref: initialize all processes in the system
  * NOTE: We assume there are only two user processes in the system in this example.
@@ -43,23 +47,23 @@ void process_init()
 	int i;
 	U32 *sp;
 
-	//get kernel procs
-	k_set_procs();
-
-    /* fill out the initialization table */
+    //fill out the initialization table
 	set_test_procs();
 
-	for ( i = NUM_K_PROCS; i < NUM_PROCS; i++ ) {
+	for ( i = 1; i < NUM_TEST_PROCS + 1; i++ ) {
 		g_proc_table[i].m_pid = g_test_procs[i-1].m_pid;
 		g_proc_table[i].m_stack_size = g_test_procs[i-1].m_stack_size;
 		g_proc_table[i].mpf_start_pc = g_test_procs[i-1].mpf_start_pc;
 
 		//change priority to lowest if its out of bounds so that the user process runs
-		if (g_test_procs[i-1].m_priority > LOWEST_PRIORITY || g_test_procs[i-1].m_priority < HIGHEST_PRIORITY) {
-			g_test_procs[i-1].m_priority = LOWEST_PRIORITY;
+		if (g_test_procs[i].m_priority > LOWEST_PRIORITY || g_test_procs[i].m_priority < HIGHEST_PRIORITY) {
+			g_test_procs[i].m_priority = LOWEST_PRIORITY;
 		}
 		g_proc_table[i].m_priority = g_test_procs[i-1].m_priority;
 	}
+
+	//set os procs
+	set_os_procs();
 
 	/* initilize exception stack frame (i.e. initial context) for each process */
 	for ( i = 0; i < NUM_PROCS; i++ ) {
@@ -76,8 +80,9 @@ void process_init()
 			*(--sp) = 0x0;
 		}
 		(gp_pcbs[i])->mp_sp = sp;
-
-		enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
+		if(i < NUM_PROCS - NUM_I_PROCS) {
+			enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
+		}
 	}
 }
 
@@ -197,15 +202,14 @@ int k_release_processor(void)
 
 PCB* get_pcb_from_pid(int process_id)
 {
-	PCB* pcb;
 	int i;
-	for (i=0;i < NUM_PROCS; i++){
-		if (g_proc_table[i].m_pid == process_id && process_id > 0) {
-			pcb = gp_pcbs[i];
-		}
+	if (process_id <= 0) return NULL;
+
+	for (i=0; i < NUM_PROCS; i++){
+		if (g_proc_table[i].m_pid == process_id) return gp_pcbs[i];
 	}
 
-	return pcb;
+	return NULL;
 }
 
 void block_process(PCB *proc, int pid, PROC_STATE_E blocked_status)
@@ -258,19 +262,39 @@ int k_send_message(int receiving_pid, void *message_envelope)
 	return RTX_OK;
 }
 
-int k_send_delayed_message(int process_id, void *message_envelope, int delay)
+int k_send_delayed_message(int receiving_pid, void *message_envelope, int delay)
 {
-	msg_Node* envelope = (msg_Node*) message_envelope;
+	PCB* receiving_proc;
+	msg_Node *msg;
 	if (message_envelope == NULL)
 	{
 		return RTX_ERR;
 	}
-	
-	//envelope->expireTime = getCurrentTime() + delay;//is delay in milliseconds? need to compensate if it is
-	//envelope->d_pid = process_id;
-	//k_send_message(timerPCB->pid ,envelope);//send to the timer process to deal with
 
-	return RTX_OK;
+	//atomic(ON);
+
+	msg = k_request_memory_block();
+	receiving_proc = get_pcb_from_pid(receiving_pid);
+
+	msg->next = NULL;
+	msg->d_pid = receiving_pid;
+	msg->s_pid = gp_current_process->m_pid;
+	msg->msgbuf = message_envelope;
+
+	enqueue(receiving_proc->msg_q, (queue_node*) msg);
+
+	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
+		//set state to ready, and move from blocked queue to ready queue
+        ready_process(receiving_proc, receiving_pid);
+
+        //atomic(OFF);
+		//k_release_processor();
+		//atomic(ON);
+		return 1;
+	}
+
+	//atomic(OFF);
+	return 0;
 }
 
 void *get_message(int *sender_id, int block)
@@ -311,17 +335,49 @@ void *k_receive_message_non_block(int *sender_id)
 	return get_message(sender_id, FALSE);
 }
 
-void timer_i_process ( ) {
-	/*
-	// get pending requests
-	while ( pending messages to i-process ) {
-		insert envelope into the delayed queue in order of expirery times ;
+
+// Debug Functions
+void print_ready_procs(void)
+{
+	int i;
+	uart1_put_string("ready queue\n\r");
+	for(i = 0; i < NUM_PROCS; i++) {
+		if ((gp_pcbs[i])->m_state == RDY){
+			uart1_put_string("process ");
+			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
+			uart1_put_string(" priority ");
+			uart1_put_char('0' + (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+			uart1_put_string("\n\r");
+		}
 	}
-	while ( first message in queue timeout expired ) {
-		msg_t * env = dequeue ( timeout_queue ) ;
-		int target_pid = env->destination_pid ;
-		// forward msg to destination
-		send_message ( target_pid , env ) ;
+}
+
+void print_mem_blocked_procs(void)
+{
+	int i;
+	uart1_put_string("blocked on memory queue\n\r");
+	for(i = 0; i < NUM_PROCS; i++) {
+		if ((gp_pcbs[i])->m_state == BLOCKED_ON_RESOURCE){
+			uart1_put_string("process ");
+			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
+			uart1_put_string(" priority ");
+			uart1_put_char('0' + (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+			uart1_put_string("\n\r");
+		}
 	}
-	*/
+}
+
+void print_receive_blocked_procs(void)
+{
+	int i;
+	uart1_put_string("blocked on receive queue\n\r");
+	for(i = 0; i < NUM_PROCS; i++) {
+		if ((gp_pcbs[i])->m_state == BLOCKED_ON_RECEIVE){
+			uart1_put_string("process ");
+			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
+			uart1_put_string(" priority ");
+			uart1_put_char('0' + (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+			uart1_put_string("\n\r");
+		}
+	}
 }

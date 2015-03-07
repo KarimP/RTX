@@ -12,7 +12,6 @@
 
 #include "k_rtx.h"
 #include "k_process_queue.h"
-#include "k_usr_proc.h"
 #include "k_queue.h"
 #include "k_message.h"
 #include "k_memory.h"
@@ -35,10 +34,11 @@ PCB* get_pcb_from_pid(int);
 extern U32 *alloc_stack(U32 size_b);   /* allocate stack for a process */
 extern void __rte(void);               /* pop exception stack frame */
 extern void set_test_procs(void);      /* test process initial set up */
+extern void set_os_procs(void);
 
-extern process_queue **ready_queue;
-extern process_queue **blocked_queue;
-
-//extern PROC_INIT g_proc_table[NUM_PROCS];
+// UART Debug procs
+void print_ready_procs(void);
+void print_mem_blocked_procs(void);
+void print_receive_blocked_procs(void);
 
 #endif /* ! K_PROCESS_H_ */

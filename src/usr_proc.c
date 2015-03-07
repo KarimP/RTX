@@ -128,9 +128,7 @@ void proc1(void)
  */
 void proc2(void)
 {
-	int i = 0;
 	MSG_BUF *msg;
-	int sender_id;
 	while (TRUE) {
 
 		void *blk = request_memory_block();

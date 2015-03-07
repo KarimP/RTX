@@ -8,7 +8,7 @@
 
 #include <LPC17xx.h>
 #include "timer.h"
-#include "k_irq.h"
+#include "irq.h"
 
 #define BIT(X) (1<<X)
 
@@ -114,6 +114,6 @@ void c_TIMER0_IRQHandler(void)
 {
 	LPC_TIM0->IR = BIT(0);  // ack inttrupt, see section  21.6.1 on pg 493 of LPC17XX_UM
 	g_timer_count++;
-	k_irq_handler(TIMER);
+//	k_irq_handler(TIMER);
 }
 

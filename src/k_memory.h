@@ -23,19 +23,12 @@ typedef queue_node* mem_blk;
 /* ----- Variables ----- */
 /* This symbol is defined in the scatter file (see RVCT Linker User Guide) */
 extern unsigned int Image$$RW_IRAM1$$ZI$$Limit;
-extern PCB **gp_pcbs;
-extern PROC_INIT g_proc_table[NUM_PROCS];
-extern PCB *gp_current_process;
-
-extern process_queue **ready_queue;
-extern process_queue **blocked_queue;
-
-extern queue *delayed_queue;
 
 /* ----- Functions ------ */
 void memory_init(void);
 U32 *alloc_stack(U32 size_b);
 void *k_request_memory_block(void);
+void *k_non_blocking_request_memory_block(void);
 int k_release_memory_block(void *);
 int setup_heap(void);
 

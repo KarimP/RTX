@@ -5,13 +5,14 @@
  * @date:   2014/01/17
  */
 
-#ifndef K_USR_PROC_H_
-#define K_USR_PROC_H
+#ifndef SYS_PROC_H
+#define SYS_PROC_H
 
-#include "k_rtx.h"
-#include "k_process.h"
+#include "rtx.h"
+#include "kcd.h"
+#include "irq.h"
+#include "crt.h"
 
 void null_proc(void);
-void k_set_procs(void);
 
 #endif /* K_USR_PROC_H_ */

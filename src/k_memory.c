@@ -12,10 +12,6 @@
 #include "printf.h"
 #endif /* ! DEBUG_0 */
 
-#define MEM_BLK_SIZE 128
-
-#define NUM_BLOCKS 20
-
 /* ----- Global Variables ----- */
 U32 *gp_stack; /* The last allocated stack low address. 8 bytes aligned */
                /* The first stack starts at the RAM high address */
@@ -58,6 +54,15 @@ U8 *p_end;
 0x10000000+---------------------------+ Low Address
 
 */
+
+extern PCB **gp_pcbs;
+extern PCB *gp_current_process;
+
+extern process_queue **ready_queue;
+extern process_queue **blocked_queue;
+
+extern queue *delayed_queue;
+
 void memory_init(void)
 {
 	int i;
@@ -96,7 +101,7 @@ void memory_init(void)
 	if ((U32)gp_stack & 0x04) { /* 8 bytes alignment */
 		--gp_stack;
 	}
-	
+
 	// message queue for PCB
 	for ( i = 0; i < NUM_PROCS; i++ ) {
 		gp_pcbs[i]->msg_q = (queue *)p_end;
@@ -215,10 +220,39 @@ U32 *alloc_stack(U32 size_b)
 	return sp;
 }
 
+
 /**
  * @brief attempts to allocate a memory block for the process and blocks the process if that is not possible
  * @return returns a memory block when it is possible to do so
  */
+// void *k_request_memory_block(void)
+// {
+// 	int process_priority;
+// 	mem_blk blk = dequeue(heap_q);
+
+// 	#ifdef DEBUG_1
+// 	printf("k_request_memory_block: entering...\n\r");
+// 	#endif /* ! DEBUG_1 */
+
+// 	while (blk == NULL ) {
+
+// 		process_priority = k_get_process_priority(gp_current_process->m_pid);
+// 		pop_queue(ready_queue, gp_current_process->m_pid, process_priority);
+
+// 		enqueue_priority_queue(blocked_queue, gp_current_process, process_priority);
+
+// 		//set process state to BLOCKED_ON_RESOURCE ;
+// 		gp_current_process->m_state = BLOCKED_ON_RESOURCE;
+
+// 		k_release_processor();
+// 	}
+
+// 	#ifdef DEBUG_1
+// 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
+// 	#endif /* ! DEBUG_1 */
+
+// 	return blk + 1;
+// }
 void *k_request_memory_block(void)
 {
 	int process_priority;
@@ -228,6 +262,7 @@ void *k_request_memory_block(void)
 	printf("k_request_memory_block: entering...\n\r");
 	#endif /* ! DEBUG_1 */
 
+	atomic(ON);
 	while (blk == NULL ) {
 
 		process_priority = k_get_process_priority(gp_current_process->m_pid);
@@ -237,8 +272,28 @@ void *k_request_memory_block(void)
 
 		//set process state to BLOCKED_ON_RESOURCE ;
 		gp_current_process->m_state = BLOCKED_ON_RESOURCE;
-
+		atomic(OFF);
 		k_release_processor();
+		atomic(ON);
+	}
+
+	#ifdef DEBUG_1
+	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
+	#endif /* ! DEBUG_1 */
+	atomic(OFF);
+	return blk + 1;
+}
+
+void *k_non_blocking_request_memory_block(void)
+{
+	mem_blk blk = dequeue(heap_q);
+
+	#ifdef DEBUG_1
+	printf("k_non_blocking_request_memory_block: entering...\n\r");
+	#endif /* ! DEBUG_1 */
+
+	if (blk == NULL ) {
+		return NULL;
 	}
 
 	#ifdef DEBUG_1
@@ -247,7 +302,6 @@ void *k_request_memory_block(void)
 
 	return blk + 1;
 }
-
 /**
  * @brief deallocates the passed in memory block if it is possible to do so
  * @return RTX_ERR on error and RTX_OK on success
