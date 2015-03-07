@@ -25,6 +25,8 @@
 /* ----- Global Variables ----- */
 PCB **gp_pcbs;                  /* array of pcbs */
 PCB *gp_current_process = NULL; /* always point to the current RUN process */
+PCB *uart = NULL; //uart PCB
+PCB *timer = NULL;//timer PCB
 
 queue *delayed_queue;
 
@@ -263,9 +265,10 @@ int k_send_delayed_message(int process_id, void *message_envelope, int delay)
 	{
 		return RTX_ERR;
 	}
-	//envelope->expireTime = getCurrentTime() + delay;
+	
+	//envelope->expireTime = getCurrentTime() + delay;//is delay in milliseconds? need to compensate if it is
 	//envelope->d_pid = process_id;
-	enqueue(delayed_queue, (queue_node*) envelope);
+	//k_send_message(timerPCB->pid ,envelope);//send to the timer process to deal with
 
 	return RTX_OK;
 }
@@ -306,4 +309,19 @@ void *k_receive_message(int *sender_id)
 void *k_receive_message_non_block(int *sender_id)
 {
 	return get_message(sender_id, FALSE);
+}
+
+void timer_i_process ( ) {
+	/*
+	// get pending requests
+	while ( pending messages to i-process ) {
+		insert envelope into the delayed queue in order of expirery times ;
+	}
+	while ( first message in queue timeout expired ) {
+		msg_t * env = dequeue ( timeout_queue ) ;
+		int target_pid = env->destination_pid ;
+		// forward msg to destination
+		send_message ( target_pid , env ) ;
+	}
+	*/
 }

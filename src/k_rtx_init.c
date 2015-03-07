@@ -13,9 +13,10 @@
 void k_rtx_init(void)
 {
         __disable_irq();
+				//timer_init(0);
         uart0_init();
         memory_init();
-        process_init();
+        process_init();// need to init the two iprocesses as well
 				setup_heap();
         __enable_irq();
 
