@@ -38,6 +38,8 @@ extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
 
+int is_blocking = TRUE;
+
 int release_proc(int);
 
 /**
@@ -255,9 +257,11 @@ int k_send_message(int receiving_pid, void *message_envelope)
 		//set state to ready, and move from blocked queue to ready queue
         ready_process(receiving_proc, receiving_pid);
 
-        atomic(OFF);
-		k_release_processor();
-		atomic(ON);
+        if (is_blocking) {
+        	atomic(OFF);
+			k_release_processor();
+			atomic(ON);
+        }
 	}
 
 	atomic(OFF);
@@ -309,9 +313,11 @@ void *get_message(int *sender_id, int block)
 	while(isEmpty(gp_current_process->msg_q) && block) {
         block_process(gp_current_process, gp_current_process->m_pid, BLOCKED_ON_RECEIVE);
 
-        atomic(OFF);
-		k_release_processor();
-		atomic(ON);
+        if (is_blocking) {
+        	atomic(OFF);
+			k_release_processor();
+			atomic(ON);
+        }
 	}
 
 	msg = (msg_Node*)dequeue((gp_current_process->msg_q));

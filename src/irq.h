@@ -9,6 +9,6 @@ void init_irq_procs(void);
 void k_irq_handler(irq_type);
 
 void timer_irq_proc(void);
-void uart_irq_proc(uint8_t);
+void uart_irq_proc(char);
 
 #endif /* ! K_IRQ_H_ */

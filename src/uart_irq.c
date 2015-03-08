@@ -20,6 +20,7 @@ uint8_t *gp_buffer = g_buffer;
 
 extern PCB *gp_current_process;
 extern PCB **gp_pcbs;
+extern int is_blocking;
 
 /**
  * @brief: initialize the n_uart
@@ -150,15 +151,21 @@ int uart_irq_init(int n_uart) {
 	return 0;
 }
 
-void UART_IProcessHandler(uint8_t key)
+void UART_IProcessHandler(char key)
 {
 	PCB *current_process = gp_current_process;
 	gp_current_process->mp_sp = (U32 *) __get_MSP();
 	gp_current_process = gp_pcbs[PID_UART_IPROC];
 
+	atomic(ON);
+	is_blocking = FALSE;
+
 	uart_irq_proc(key);
 
 	gp_current_process = current_process;
+
+	is_blocking = TRUE;
+	atomic(OFF);
 	k_release_processor();
 }
 
@@ -172,25 +179,25 @@ void UART_IProcessHandler(uint8_t key)
 __asm void UART0_IRQHandler(void)
 {
 	PRESERVE8
-	IMPORT c_UART0_IRQHandler
+	IMPORT c_UART_IRQHandler
 	PUSH{r4-r11, lr}
-	BL c_UART0_IRQHandler
+	BL c_UART_IRQHandler
 	POP{r4-r11, pc}
 }
 
 __asm void UART1_IRQHandler(void)
 {
 	PRESERVE8
-	IMPORT c_UART0_IRQHandler
+	IMPORT c_UART_IRQHandler
 	PUSH{r4-r11, lr}
-	BL c_UART0_IRQHandler
+	BL c_UART_IRQHandler
 	POP{r4-r11, pc}
 }
 
 /**
  * @brief: c UART0 IRQ Handler
  */
-void c_UART0_IRQHandler(void)
+void c_UART_IRQHandler(void)
 {
 	uint8_t IIR_IntId;	    // Interrupt ID from IIR
 	uint8_t g_char_in, g_char_out;

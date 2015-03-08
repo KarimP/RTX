@@ -1,6 +1,7 @@
 #include "k_process_queue.h"
 
 extern PCB *gp_current_process;
+extern int is_blocking;
 
 process_queue **ready_queue;
 process_queue **blocked_queue;
@@ -186,7 +187,7 @@ int k_set_process_priority(int process_id, int priority)
 		proc = search_and_change_process_priority(queue, process_id, prev_priority, priority);
 	}
 
-	if (current_process_priority > get_highest_queue_priority(ready_queue)) {
+	if (current_process_priority > get_highest_queue_priority(ready_queue) && is_blocking) {
 		k_release_processor();
 	}
 
