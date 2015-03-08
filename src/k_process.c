@@ -30,9 +30,6 @@ PCB *timer = NULL; //timer PCB
 
 queue *delayed_queue;
 
-int is_blocking = TRUE;
-int i_process_switch = FALSE;
-
 /* process initialization table */
 PROC_INIT g_proc_table[NUM_PROCS];
 extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
@@ -188,12 +185,7 @@ int k_release_processor(void)
 	PCB *p_pcb_old = NULL;
 
 	p_pcb_old = gp_current_process;
-	if (i_process_switch) {
-		gp_current_process = gp_pcbs[i_process_switch];
-		i_process_switch = FALSE;
-	} else {
-		gp_current_process = scheduler();
-	}
+	gp_current_process = scheduler();
 
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = p_pcb_old; // revert back to the old process

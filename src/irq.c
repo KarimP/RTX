@@ -32,11 +32,9 @@ void uart_irq_proc(uint8_t key)
 	void *block;
 	MSG_BUF * msg;
 	int pid;
-	printf("uart iprocess running\n");
-	while(TRUE) {
-		release_processor();
-	}
-	// atomic(ON);
+	printf("\n uart iprocess running \n");
+
+	atomic(ON);
 	#ifdef DEBUG_HOTKEYS
 		switch (key) { // printing process list and memory blocks available still left
 			case '\r':
@@ -56,7 +54,7 @@ void uart_irq_proc(uint8_t key)
 		}
 	#endif
 
-	block = (void *) non_blocking_request_memory_block();
+	block = (void *) request_memory_block();
 	msg = (MSG_BUF *) block;
 	if (block != NULL) {
 		if (key == '\r') { // newline
@@ -89,5 +87,5 @@ void uart_irq_proc(uint8_t key)
 			index++;
 		}
 	}
-	// atomic(OFF);
+	atomic(OFF);
 }

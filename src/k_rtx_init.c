@@ -15,8 +15,9 @@ void k_rtx_init(void)
     atomic(ON);
 	//timer_init(0);
 
-    uart1_irq_init(); // interrupt driven, for RTX console
+    uart0_irq_init();
     uart0_init(); //polling, for DEBUGGING
+    uart1_init(); //polling, for DEBUGGING
 
     memory_init();
     process_init();
