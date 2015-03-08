@@ -155,6 +155,17 @@ int uart_irq_init(int n_uart) {
 	return 0;
 }
 
+void IProcessHandler()
+{
+	PCB *current_process = gp_current_process;
+	gp_current_process->mp_sp = (U32 *) __get_MSP();
+	gp_current_process = gp_pcbs[PID_UART_IPROC];
+
+	uart_irq_proc(2);
+
+	gp_current_process = current_process;
+	k_release_processor();
+}
 
 /**
  * @brief: use CMSIS ISR for UART0 IRQ Handler
@@ -166,9 +177,18 @@ int uart_irq_init(int n_uart) {
 __asm void UART0_IRQHandler(void)
 {
 	PRESERVE8
-	IMPORT c_UART_IRQHandler
+	IMPORT c_UART0_IRQHandler
 	PUSH{r4-r11, lr}
-	BL c_UART_IRQHandler
+	BL c_UART0_IRQHandler
+	POP{r4-r11, pc}
+}
+
+__asm void UART1_IRQHandler(void)
+{
+	PRESERVE8
+	IMPORT c_UART0_IRQHandler
+	PUSH{r4-r11, lr}
+	BL c_UART0_IRQHandler
 	POP{r4-r11, pc}
 }
 
@@ -189,6 +209,7 @@ void c_UART0_IRQHandler(void)
 	if (IIR_IntId & IIR_RDA) { // Receive Data Avaialbe
 		/* read UART. Read RBR will clear the interrupt */
 		g_char_in = pUart->RBR;
+
 #ifdef DEBUG_0
 		uart1_put_string("Reading a char = ");
 		uart1_put_char(g_char_in);
@@ -228,50 +249,5 @@ void c_UART0_IRQHandler(void)
 #endif // DEBUG_0
 		return;
 	}
-}
-
-/**
- * @brief: use CMSIS ISR for UART0 IRQ Handler
- * NOTE: This example shows how to save/restore all registers rather than just
- *       those backed up by the exception stack frame. We add extra
- *       push and pop instructions in the assembly routine.
- *       The actual c_UART0_IRQHandler does the rest of irq handling
- */
-// __asm void UART1_IRQHandler(void)
-// {
-// 	PRESERVE8
-// 	IMPORT c_UART_IRQHandler
-// 	IMPORT k_release_processor
-// 	PUSH{r4-r11, lr}
-// 	BL c_UART_IRQHandler
-// 	LDR R4, =__cpp(&i_process_switch)
-// 	LDR R4, [R4]
-// 	MOV R5, #0
-// 	CMP R4, R5
-// 	BEQ RESTORE    ; if i_process_switch == 0 (FALSE), then restore the process that was interrupted
-// 	BL k_release_processor  ; otherwise switch to the process with the pid of i_process_switch)
-// RESTORE
-// 	POP{r4-r11, pc}
-// }
-
-__asm void UART1_IRQHandler(void)
-{
-	PRESERVE8
-	IMPORT c_UART_IRQHandler
-	PUSH{r4-r11, lr}
-	BL c_UART_IRQHandler
-	POP{r4-r11, pc}
-}
-
-
-void c_UART_IRQHandler(void)
-{
-	PCB *current_process = gp_current_process;
-	gp_current_process->mp_sp = (U32 *) __get_MSP();
-	gp_current_process = gp_pcbs[PID_UART_IPROC];
-
-	uart_irq_proc(2);
-
-	gp_current_process = current_process;
-	k_release_processor();
+	IProcessHandler();
 }
