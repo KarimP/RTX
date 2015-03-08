@@ -105,17 +105,35 @@ void set_test_procs() {
 void proc1(void)
 {
 	int i = 0;
-    int sender_id = -1;
+  int sender_id = -1;
 	MSG_BUF *msg = NULL;
-	while (TRUE) {
-        msg = (MSG_BUF *)receive_message(&sender_id);
+	MSG_BUF *receive_msg = NULL;
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = KCD_REG;
+	msg->mtext[0] = '%';
+	msg->mtext[1] = 'W';
+	msg = (MSG_BUF *)send_message(PID_KCD, msg); 
 
-		printf("message received from sender: %d Message: ", sender_id);
-		for (i = 0; i < 4; ++i) {
-			printf("%c", msg->mtext[i]);
+	while (TRUE) {
+		receive_msg = (MSG_BUF *)receive_message(&sender_id);
+		if(receive_msg->mtext[0] == '%') {
+			printf("Received command: ");
+
+			for (i = 0; receive_msg->mtext[i] != '\0'; ++i ) {
+				printf("%c", receive_msg->mtext[i]);
+			}
+
+			uart0_put_string("\n");
 		}
-        uart0_put_string("\n\r");
-        release_memory_block(msg);
+		release_memory_block(receive_msg);
+  //       msg = (MSG_BUF *)receive_message(&sender_id);
+
+		// printf("message received from sender: %d Message: ", sender_id);
+		// for (i = 0; i < 4; ++i) {
+		// 	printf("%c", msg->mtext[i]);
+		// }
+  //       uart0_put_string("\n\r");
+  //       release_memory_block(msg);
 
         printTestResults(TRUE);
         release_processor();
@@ -129,18 +147,31 @@ void proc1(void)
 void proc2(void)
 {
 	MSG_BUF *msg;
+	int i = 0;
 	while (TRUE) {
 
-		void *blk = request_memory_block();
+		//void *blk = request_memory_block();
 
-        msg = (MSG_BUF *)request_memory_block();
-		msg->mtype = DEFAULT;
-		msg->mtext[0] = 'h';
-		msg->mtext[1] = 'e';
-		msg->mtext[2] = 'l';
-		msg->mtext[3] = 'l';
+		for(i = 0; i < 6; i++) {
+			msg = (MSG_BUF *)request_memory_block();
+			msg->mtype = UART_INPUT;
+			if(i==0)
+				msg->mtext[0] = '%';
+			else if(i==1)
+				msg->mtext[0] = 'W';
+			else if(i==2)
+				msg->mtext[0] = 'A';
+			else if(i==3)
+				msg->mtext[0] = ' ';
+			else if(i==4)
+				msg->mtext[0] = 'B';
+			else if(i==5)
+				msg->mtext[0] = '\n';
+			
+			send_message(PID_KCD, msg);
+		}
 
-		send_message(PROC1_PID, msg);
+		
 
         printTestResults(TRUE);
         release_processor();
@@ -236,7 +267,7 @@ void priority_test(void)
 {
 	while (TRUE) {
 
-		void *blk = request_memory_block();
+		//void *blk = request_memory_block();
 		int passed = TRUE;
 		testing_priority = TRUE;
 
@@ -292,7 +323,7 @@ void preemption_check(void)
 {
 	while (TRUE) {
 
-		void *blk = request_memory_block();
+		//void *blk = request_memory_block();
 		int passed = TRUE;
 
 		if (testing_priority) {
@@ -324,6 +355,7 @@ void proc6(void)
 {
 
 	while (TRUE) {
-		request_memory_block();
+		//request_memory_block();
+		release_processor();
 	}
 }

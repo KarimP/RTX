@@ -21,7 +21,8 @@ int foundCommand;
 void kcd_proc()
 {
 	MSG_BUF *msg = NULL;
-    MSG_BUF *command_msg = NULL;
+  int command_sender = -1;  
+	MSG_BUF *command_msg = NULL;
     buf = (char *)request_memory_block();
     buf_size = 0;
 
@@ -33,6 +34,7 @@ void kcd_proc()
 
     i = 0;
     foundCommand = FALSE;
+		
     while(TRUE) {
         // k_release_processor();
         msg = (MSG_BUF *)receive_message(&sender_id);
@@ -50,27 +52,31 @@ void kcd_proc()
                         for (i = 0; i < num_commands; i++) {
                             if(commands[i] == msg->mtext[0]) {
                                 foundCommand = TRUE;
-                                sender_id = command_procs[i];
+                                command_sender = command_procs[i];
                                 break;
                             }
                         }
                     }
-
+										
                     if (foundCommand) {
-                        buf[buf_size++] = msg->mtext[0];
-                    }
+											buf[buf_size++] = msg->mtext[0];
+										} else {
+											buf_size = 0;
+											if(msg->mtext[0] == '%') {
+												buf[buf_size++] = msg->mtext[0];
+												foundCommand = TRUE;
+											}
+										}
 
                     if (foundCommand && (msg->mtext[0] == '\n' || msg->mtext[0] == '%') && buf_size > 1) {
 
-                        buf[buf_size++] = '\0';
+                        buf[--buf_size] = '\0';
                         command_msg = (MSG_BUF *)request_memory_block();
                         command_msg->mtype = DEFAULT;
 
-                        for (i = 0; i < buf_size; ++i) {
-                            command_msg->mtext[i] = buf[i];
-                        }
+                        for (i = 0; i < buf_size; ++i) command_msg->mtext[i] = buf[i];
 
-                        send_message(sender_id, (void *)command_msg);
+                        send_message(command_sender, (void *)command_msg);
 
                         buf_size = 0;
                         if(msg->mtext[0] == '%') {
@@ -79,7 +85,7 @@ void kcd_proc()
                     }
 
                     if (buf_size > MEM_BLK_SIZE) buf_size = 0;
-
+										
                     msg->mtype = DEFAULT;
                     send_message(CRT_PID, (void *)msg);
                     break;
