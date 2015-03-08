@@ -104,6 +104,7 @@ void set_test_procs() {
  */
 void proc1(void)
 {
+
 	int i = 0;
   int sender_id = -1;
 	MSG_BUF *msg = NULL;
@@ -112,7 +113,18 @@ void proc1(void)
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
 	msg->mtext[1] = 'W';
-	msg = (MSG_BUF *)send_message(PID_KCD, msg); 
+	msg = (MSG_BUF *)send_message(PID_KCD, msg);
+
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = CRT_REG;
+	msg->mtext[0] = 'h';
+	msg->mtext[1] = 'i';
+	msg->mtext[2] = 'i';
+	msg->mtext[3] = ':';
+	msg->mtext[4] = ')';
+	msg->mtext[5] = '\n';
+	msg->mtext[6] = '\0';
+	send_message(PID_CRT, msg);
 
 	while (TRUE) {
 		receive_msg = (MSG_BUF *)receive_message(&sender_id);
@@ -167,11 +179,11 @@ void proc2(void)
 				msg->mtext[0] = 'B';
 			else if(i==5)
 				msg->mtext[0] = '\n';
-			
+
 			send_message(PID_KCD, msg);
 		}
 
-		
+
 
         printTestResults(TRUE);
         release_processor();

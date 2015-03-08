@@ -1,8 +1,9 @@
 #include "irq.h"
-#include "k_rtx.h"
-#include "k_message.h"
-#include "k_process.h"
-#include "k_memory.h"
+#include "rtx.h"
+#include "printf.h"
+//#include "k_message.h"
+//#include "k_process.h"
+//#include "k_memory.h"
 
 #define BUFF_SIZE 100
 uint8_t input_buffer[BUFF_SIZE] = "";
@@ -19,19 +20,23 @@ void k_irq_handler(irq_type type){
 		default:
 				break;
 	}
-	
+
 	//k_release_processor();
 }
 
 
 
-void uart_irq_proc(uint8_t key) 
+void uart_irq_proc(uint8_t key)
 {
 	int i;
 	void *block;
 	MSG_BUF * msg;
 	int pid;
-	atomic(ON);
+	printf("uart iprocess running\n");
+	while(TRUE) {
+		release_processor();
+	}
+	// atomic(ON);
 	#ifdef DEBUG_HOTKEYS
 		switch (key) { // printing process list and memory blocks available still left
 			case '\r':
@@ -51,7 +56,7 @@ void uart_irq_proc(uint8_t key)
 		}
 	#endif
 
-	block = (void *) k_non_blocking_request_memory_block();
+	block = (void *) non_blocking_request_memory_block();
 	msg = (MSG_BUF *) block;
 	if (block != NULL) {
 		if (key == '\r') { // newline
@@ -63,7 +68,7 @@ void uart_irq_proc(uint8_t key)
 			for (i = 0; i < index; i++) {
 				msg->mtext[i] = input_buffer[i];
 			}
-			k_send_message(pid, (void *)msg);
+			send_message(pid, (void *)msg);
 		} else {
 			for (i = 0; i < BUFF_SIZE; i++) {
 				msg->mtext[i] = '\0';
@@ -71,7 +76,7 @@ void uart_irq_proc(uint8_t key)
 			msg->mtype = CRT_REG;
 			pid = PID_CRT;
 			msg->mtext[0] = key;
-			k_send_message(pid, (void *)msg);
+			send_message(pid, (void *)msg);
 		}
 	} else {
 		if (key == '\r') {
@@ -81,8 +86,8 @@ void uart_irq_proc(uint8_t key)
 			}
 		} else {
 			input_buffer[index % BUFF_SIZE] = key;
-			index++;	
+			index++;
 		}
 	}
-	atomic(OFF);
+	// atomic(OFF);
 }

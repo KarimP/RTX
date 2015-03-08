@@ -11,6 +11,7 @@
 #include "k_rtx.h"
 #include "k_process.h"
 #include "k_memory.h"
+#include "uart.h"
 
 /* Functions */
 void k_rtx_init(void);

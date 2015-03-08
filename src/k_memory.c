@@ -263,6 +263,7 @@ void *k_request_memory_block(void)
 	#endif /* ! DEBUG_1 */
 
 	atomic(ON);
+
 	while (blk == NULL ) {
 
 		process_priority = k_get_process_priority(gp_current_process->m_pid);
@@ -292,7 +293,10 @@ void *k_non_blocking_request_memory_block(void)
 	printf("k_non_blocking_request_memory_block: entering...\n\r");
 	#endif /* ! DEBUG_1 */
 
+	atomic(ON);
+
 	if (blk == NULL ) {
+		atomic(OFF);
 		return NULL;
 	}
 
@@ -300,6 +304,7 @@ void *k_non_blocking_request_memory_block(void)
 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
 	#endif /* ! DEBUG_1 */
 
+	atomic(OFF);
 	return blk + 1;
 }
 /**
@@ -309,22 +314,26 @@ void *k_non_blocking_request_memory_block(void)
 int k_release_memory_block(void *p_mem_blk)
 {
 	mem_blk rel_blk = (mem_blk)p_mem_blk - 1;
-	int i;
+	int i = 0;
 	PCB *pcb = NULL;
+
+	int a = (p_mem_blk == NULL);
+	int b = ((U8 *)rel_blk < p_end);
+	int c = ((U8 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack);
+	int d = ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0);
 
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: releasing block @ 0x%x \n\r", p_mem_blk);
 	#endif /* ! DEBUG_1 */
 
-	int a = (rel_blk == NULL);
-	int b = ((U8 *)rel_blk < p_end);
-	int c = ((U8 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack);
-	int d = ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0);
+	atomic(ON);
 	if ( a || b || c || d ) {
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
 	if (enqueue(heap_q, rel_blk) != RTX_OK) {
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
@@ -335,7 +344,9 @@ int k_release_memory_block(void *p_mem_blk)
 			pcb->m_state = RDY;
 			enqueue_priority_queue(ready_queue, pcb, i);
 			if (i > k_get_process_priority(gp_current_process->m_pid)) {
+				atomic(OFF);
 				k_release_processor();
+				atomic(ON);
 			}
 			break;
 		}
@@ -344,6 +355,6 @@ int k_release_memory_block(void *p_mem_blk)
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: exiting...\n\rheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\r\n\r", heap_q->first, heap_q->first->next);
 	#endif /* ! DEBUG_1 */
-
+	atomic(OFF);
 	return RTX_OK;
 }

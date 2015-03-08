@@ -30,6 +30,7 @@ void atomic(int);
 int k_send_message(int, void*);
 void *k_receive_message(int*);
 PCB* get_pcb_from_pid(int);
+int k_release_processor_irq(int);
 
 extern U32 *alloc_stack(U32 size_b);   /* allocate stack for a process */
 extern void __rte(void);               /* pop exception stack frame */

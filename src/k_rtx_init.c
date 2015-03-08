@@ -14,10 +14,13 @@ void k_rtx_init(void)
 {
     atomic(ON);
 	//timer_init(0);
-    uart0_init();
+
+    uart1_irq_init(); // interrupt driven, for RTX console
+    uart0_init(); //polling, for DEBUGGING
+
     memory_init();
-    process_init(); // need to init the two iprocesses as well
-	setup_heap();
+    process_init();
+    setup_heap();
     atomic(OFF);
 
 	/* start the first process */

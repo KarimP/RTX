@@ -6,37 +6,24 @@
 #define UART_INPUT 2
 #define CRT_PID 8
 
-char *buf;
-int buf_size;
-
-int sender_id;
-
-char *commands;
-int *command_procs;
-int num_commands;
-
-int i;
-int foundCommand;
-
 void kcd_proc()
 {
 	MSG_BUF *msg = NULL;
-  int command_sender = -1;  
 	MSG_BUF *command_msg = NULL;
-    buf = (char *)request_memory_block();
-    buf_size = 0;
+    char *buf = (char *)request_memory_block();
+    int buf_size = 0;
 
-    sender_id = -1;
+    int sender_id = -1;
+    int command_sender = -1;
 
-    commands = (char *)request_memory_block();
-    command_procs = (int *)request_memory_block();
-    num_commands = 0;
+    char *commands = (char *)request_memory_block();
+    int *command_procs = (int *)request_memory_block();
+    int num_commands = 0;
 
-    i = 0;
-    foundCommand = FALSE;
-		
+    int i = 0;
+    int foundCommand = FALSE;
+
     while(TRUE) {
-        // k_release_processor();
         msg = (MSG_BUF *)receive_message(&sender_id);
 
         if (msg != NULL) {
@@ -57,16 +44,16 @@ void kcd_proc()
                             }
                         }
                     }
-										
+
                     if (foundCommand) {
-											buf[buf_size++] = msg->mtext[0];
-										} else {
-											buf_size = 0;
-											if(msg->mtext[0] == '%') {
-												buf[buf_size++] = msg->mtext[0];
-												foundCommand = TRUE;
-											}
-										}
+						buf[buf_size++] = msg->mtext[0];
+					} else {
+						buf_size = 0;
+						if(msg->mtext[0] == '%') {
+							buf[buf_size++] = msg->mtext[0];
+							foundCommand = TRUE;
+						}
+					}
 
                     if (foundCommand && (msg->mtext[0] == '\n' || msg->mtext[0] == '%') && buf_size > 1) {
 
@@ -85,8 +72,8 @@ void kcd_proc()
                     }
 
                     if (buf_size > MEM_BLK_SIZE) buf_size = 0;
-										
-                    msg->mtype = DEFAULT;
+
+                    msg->mtype = CRT_REG;
                     send_message(CRT_PID, (void *)msg);
                     break;
                 }
@@ -101,50 +88,3 @@ void kcd_proc()
         }
     }
 }
-
-// ************************ Alternate METHOD with UART sending entire line in message ************************* //
-// char *commands;
-// int *command_procs;
-// int num_commands;
-// int sender_id;
-// int i;
-
-// void kcd_proc()
-// {
-//     MSG_BUF *msg = NULL;
-//     sender_id = -1;
-//     i = 0;
-
-//     while(TRUE) {
-//         // k_release_processor();
-//         msg = (MSG_BUF *)receive_message(&sender_id);
-//         if (msg != NULL) {
-//             switch (msg->mtype) {
-//                 case UART_INPUT:
-//                 {
-//                     if (msg->mtext[0] == '%') {
-//                         for (i = 0; i < num_commands; i++) {
-//                             if(commands[i] == msg->mtext[0]) {
-//                                 msg->mtype = KCD_RETURN;
-//                                 send_message(command_procs[i], (void *)msg);
-//                                 break;
-//                             }
-//                         }
-//                     }
-//                     msg->mtype = DEFAULT;
-//                     send_message(CRT_PID, (void *)msg);
-//                     break;
-//                 }
-//                 case KCD_REG:
-//                     if (msg->mtext[0] == '%') {
-//                         commands[num_commands] = msg->mtext[1];
-//                         command_procs[num_commands++] = sender_id;
-//                     }
-//                     release_memory_block((void *)msg);
-//                     break;
-//                 default:
-//                     release_memory_block((void *)msg);
-//             }
-//         }
-//     }
-// }

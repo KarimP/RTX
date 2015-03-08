@@ -42,8 +42,8 @@
 #define PID_CLOCK        11
 #define PID_KCD          7
 #define PID_CRT          8
-#define PID_TIMER_IPROC  10
 #define PID_UART_IPROC   9
+#define PID_TIMER_IPROC  10
 
 //Memory management
 #define MEM_BLK_SIZE 128
@@ -58,7 +58,7 @@
 #define CRT_ON 5
 #define CRT_OFF 6
 #define CRT_REG 7
- 
+
 #define CLOCK_REG 3
 
 #ifdef DEBUG_0
@@ -105,6 +105,7 @@ typedef struct msgbuf
     int mtype;              /* user defined message type */
     char mtext[MEM_BLK_SIZE - sizeof(int)];          /* body of the message */
 } MSG_BUF;
+
 
 
 #endif // ! K_RTX_H_
