@@ -338,6 +338,10 @@ void preemption_check(void)
 		//void *blk = request_memory_block();
 		int passed = TRUE;
 
+		if (set_process_priority(PROC_PREEMPTION_PID, MEDIUM) == RTX_ERR) {
+			passed = FALSE;
+		}
+
 		if (testing_priority) {
 			testing_priority = FALSE;
 
@@ -345,10 +349,6 @@ void preemption_check(void)
 				process4_preempted = FALSE;
 			} else {
 				passed = FALSE; //we pre-empted when we weren't supposed to
-			}
-
-			if (set_process_priority(PROC_PREEMPTION_PID, MEDIUM) == RTX_ERR) {
-				passed = FALSE;
 			}
 
 		} else {
