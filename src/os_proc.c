@@ -39,10 +39,10 @@ void set_os_procs(void) {
     g_proc_table[9].m_priority = 0;
     g_proc_table[9].mpf_start_pc = &uart_irq_proc;
 
-    // g_proc_table[10].m_pid = (U32)(10);
-    // g_proc_table[10].m_stack_size = 0x1000;
-    // g_proc_table[10].m_priority = 0;
-    // g_proc_table[10].mpf_start_pc = &uart_irq_proc;
+    g_proc_table[10].m_pid = (U32)(10);
+    g_proc_table[10].m_stack_size = 0x1000;
+    g_proc_table[10].m_priority = 0;
+    g_proc_table[10].mpf_start_pc = &uart_timer_proc;
 }
 
 /**

@@ -18,7 +18,7 @@ typedef struct msg_Node
 	struct msg_Node *next;
 	U32 s_pid;		/* sender id */
 	U32 d_pid;		/* destination id */
-    int expire_time;
+    int expire;
 	void *msgbuf;
 } msg_Node;
 

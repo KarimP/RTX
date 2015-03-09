@@ -39,9 +39,7 @@ extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
 
 int is_blocking = TRUE;
-// int iprocess_switch = FALSE;
-
-int release_proc(int);
+int receiving_proc_unblock = TRUE;
 
 /**
  * @biref: initialize all processes in the system
@@ -192,16 +190,7 @@ int k_release_processor(void)
 
 	p_pcb_old = gp_current_process;
 
-	// if (iprocess_switch) {
-	// 	gp_current_process = gp_pcbs[iprocess_switch];
-	// 	iprocess_switch = FALSE;
-	// 	atomic(ON);
-	// 	is_blocking = FALSE;
-	// } else {
-		// is_blocking = TRUE;
-		// atomic(OFF);
-		gp_current_process = scheduler();
-	// }
+	gp_current_process = scheduler();
 
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = p_pcb_old; // revert back to the old process
@@ -246,35 +235,29 @@ void ready_process(PCB *proc, int pid)
     enqueue_priority_queue(ready_queue, proc, proc_priority);
 }
 
-int k_send_message(int receiving_pid, void *message_envelope)
-{
-	PCB* receiving_proc;
-	msg_Node *msg;
-	if (message_envelope == NULL)
-	{
-		return RTX_ERR;
-	}
+int k_send_message_with_node(msg_Node *msg) {
+	PCB* receiving_proc = NULL;
 
 	atomic(ON);
 
-	msg = k_request_memory_block();
-	receiving_proc = get_pcb_from_pid(receiving_pid);
+	if (msg == NULL) {
+		return RTX_ERR;
+	}
 
-	msg->next = NULL;
-	msg->d_pid = receiving_pid;
-	msg->s_pid = gp_current_process->m_pid;
-	msg->msgbuf = message_envelope;
+	receiving_proc = get_pcb_from_pid(msg->d_pid);
 
 	enqueue(receiving_proc->msg_q, (queue_node*) msg);
 
 	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
 		//set state to ready, and move from blocked queue to ready queue
-        ready_process(receiving_proc, receiving_pid);
+        ready_process(receiving_proc, msg->d_pid);
 
         if (is_blocking) {
         	atomic(OFF);
 			k_release_processor();
 			atomic(ON);
+        } else {
+        	receiving_proc_unblock = TRUE;
         }
 	}
 
@@ -282,40 +265,68 @@ int k_send_message(int receiving_pid, void *message_envelope)
 	return RTX_OK;
 }
 
-int k_send_delayed_message(int receiving_pid, void *message_envelope, int delay)
+int k_send_message(int receiving_pid, void *message_envelope)
 {
-	PCB* receiving_proc;
 	msg_Node *msg;
-	if (message_envelope == NULL)
-	{
+	atomic(ON);
+
+	if (message_envelope == NULL) {
 		return RTX_ERR;
+	}
+
+	msg = k_request_memory_block();
+	msg->next = NULL;
+	msg->d_pid = receiving_pid;
+	msg->s_pid = gp_current_process->m_pid;
+	msg->msgbuf = message_envelope;
+
+	atomic(OFF);
+	return k_send_message_with_node(msg);
+}
+
+int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
+{
+	msg_Node *msg = NULL, *prev_msg = NULL, *new_msg = NULL;
+
+	if (message_envelope == NULL || delay < 0) {
+		return RTX_ERR;
+	}
+
+	if (delay == 0) {
+		return k_send_message(receiving_pid, message_envelope);
 	}
 
 	atomic(ON);
 
-	msg = k_request_memory_block();
-	receiving_proc = get_pcb_from_pid(receiving_pid);
+	new_msg = k_request_memory_block();
+	new_msg->next = NULL;
+	new_msg->d_pid = receiving_pid;
+	new_msg->s_pid = gp_current_process->m_pid;
+	new_msg->expire = delay;
+	new_msg->msgbuf = message_envelope;
 
-	msg->next = NULL;
-	msg->d_pid = receiving_pid;
-	msg->s_pid = gp_current_process->m_pid;
-	msg->expire_time = delay;
-	msg->msgbuf = message_envelope;
+	//place new_msg in right position in queue
+	for (msg = (msg_Node *)delayed_queue->first; msg != NULL; prev_msg = msg, msg = msg->next) {
+		if (msg->expire > new_msg->expire) {
+			if (prev_msg == NULL) {
+				delayed_queue->first = (queue_node *)new_msg;
+			} else {
+				prev_msg->next = new_msg;
+			}
+			new_msg->next = msg;
+		} else if (msg == (msg_Node *)delayed_queue->last) {
+			msg->next = new_msg;
+			delayed_queue->last = (queue_node *)msg->next;
+			msg = msg->next;
+		}
+	}
 
-	enqueue(receiving_proc->msg_q, (queue_node*) msg);
-
-	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
-		//set state to ready, and move from blocked queue to ready queue
-        ready_process(receiving_proc, receiving_pid);
-
-        atomic(OFF);
-		k_release_processor();
-		atomic(ON);
-		return 1;
+	if (isEmpty(delayed_queue)) {
+		enqueue(delayed_queue, (queue_node *)new_msg);
 	}
 
 	atomic(OFF);
-	return 0;
+	return RTX_OK;
 }
 
 void *k_receive_message(int *sender_id)

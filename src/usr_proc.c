@@ -41,25 +41,22 @@ void set_up_testing_statements() {
 }
 
 void printTestResults(int outcome) {
-	if(testCounter > NUM_TESTS) {
-
+	if (testCounter > NUM_TESTS) {
 		#ifdef DEBUG_1
-		printf("Test: %x\n\r", testCounter);
+		printf("Test: %x\n\r", testCounter++);
 		#endif /* DEBUG_1 */
 
-		testCounter++;
 		return;
 	}
 
-	if(outcome == 1) {
+	if (outcome == 1) {
 		passedtest++;
 	}
 
 	#ifdef DEBUG_0
-	printf("G017_test: test %x %s\n\r", testCounter, outcome == 1? "OK" : "FAIL");
+	printf("G017_test: test %x %s\n\r", testCounter++, outcome == 1? "OK" : "FAIL");
 	#endif /* DEBUG_0 */
 
-	testCounter++;
 	if (testCounter > NUM_TESTS) {
 
 		#ifdef DEBUG_0
@@ -113,18 +110,18 @@ void proc1(void)
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
 	msg->mtext[1] = 'W';
-	msg = (MSG_BUF *)send_message(PID_KCD, msg);
+	delayed_send(PID_KCD, msg, 2);
 
-	// msg = (MSG_BUF *)request_memory_block();
-	// msg->mtype = CRT_REG;
-	// msg->mtext[0] = 'h';
-	// msg->mtext[1] = 'i';
-	// msg->mtext[2] = 'i';
-	// msg->mtext[3] = ':';
-	// msg->mtext[4] = ')';
-	// msg->mtext[5] = '\n';
-	// msg->mtext[6] = '\0';
-	// send_message(PID_CRT, msg);
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = CRT_REG;
+	msg->mtext[0] = 'h';
+	msg->mtext[1] = 'i';
+	msg->mtext[2] = 'i';
+	msg->mtext[3] = ':';
+	msg->mtext[4] = ')';
+	msg->mtext[5] = '\n';
+	msg->mtext[6] = '\0';
+	delayed_send(2, msg, 20000);
 
 	while (TRUE) {
 		receive_msg = (MSG_BUF *)receive_message(&sender_id);
@@ -158,11 +155,23 @@ void proc1(void)
  */
 void proc2(void)
 {
-	MSG_BUF *msg;
+	MSG_BUF *msg = NULL;
 	int i = 0;
+	int sender_id = -1;
 	while (TRUE) {
 
-		//void *blk = request_memory_block();
+		printf("proc2 running\n");
+
+		msg = (MSG_BUF *)receive_message(&sender_id);
+
+		printf("message received from sender: %d Message: ", sender_id);
+		for (i = 0; i < 6; ++i) {
+			printf("%c", msg->mtext[i]);
+		}
+        uart1_put_string("\n\r");
+        release_memory_block(msg);
+
+		// void *blk = request_memory_block();
 
 		// for(i = 0; i < 6; i++) {
 		// 	msg = (MSG_BUF *)request_memory_block();
@@ -182,8 +191,6 @@ void proc2(void)
 
 		// 	send_message(PID_KCD, msg);
 		// }
-
-
 
         printTestResults(TRUE);
         release_processor();

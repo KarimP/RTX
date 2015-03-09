@@ -21,8 +21,8 @@
 //number of processes
 #define NUM_TEST_PROCS 6
 #define NUM_OS_PROCS 3
-#define NUM_I_PROCS 1
-#define NUM_PROCS 10
+#define NUM_I_PROCS 2
+#define NUM_PROCS 11
 
 //common status values
 #define NULL 0

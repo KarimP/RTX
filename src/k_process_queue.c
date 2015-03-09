@@ -84,10 +84,6 @@ PCB *pop_queue(process_queue **queue, int process_id, int priority) {
 				}
 			}
 
-			if (pcb->mp_next == NULL) {
-				queue[priority]->last = prev_pcb;
-			}
-
 			pcb->mp_next = NULL;
 			return pcb;
 		}

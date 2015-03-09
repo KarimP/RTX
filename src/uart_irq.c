@@ -13,7 +13,7 @@
 #include "irq.h"
 #ifdef DEBUG_0
 #include "printf.h"
-#endif
+#endif /* DEBUG_0 */
 
 extern int is_blocking;
 // extern int iprocess_switch;

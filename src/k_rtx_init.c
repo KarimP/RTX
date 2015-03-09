@@ -9,16 +9,17 @@
 #include "uart_polling.h"
 #include "k_memory.h"
 #include "k_process.h"
+#include "timer.h"
 
 void k_rtx_init(void)
 {
     atomic(ON);
-	//timer_init(0);
 
     uart0_irq_init();
     // uart0_init(); //polling, for DEBUGGING
     uart1_init(); //polling, for DEBUGGING
 
+    timer_init(0);
     memory_init();
     process_init();
     setup_heap();

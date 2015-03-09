@@ -9,12 +9,25 @@
 #include <LPC17xx.h>
 #include "timer.h"
 #include "irq.h"
+#include "k_process.h"
+#include "k_rtx.h"
+#ifdef DEBUG_0
+#include "printf.h"
+#endif /* DEBUG_0 */
 
 #define BIT(X) (1<<X)
 
 volatile uint32_t g_timer_count = 0; // increment every 1 ms
 volatile uint32_t g_clock_count = 0; // increment every 1 ms
 int error;
+
+extern int is_blocking;
+extern int receiving_proc_unblock;
+extern PCB **gp_pcbs;
+extern PROC_INIT g_proc_table[NUM_PROCS];
+extern PCB *gp_current_process;
+
+extern void atomic(int);
 
 /**
  * @brief: initialize timer. Only timer 0 is supported
@@ -84,6 +97,7 @@ uint32_t timer_init(uint8_t n_timer)
 	pTimer->MCR = BIT(0) | BIT(1);
 
 	g_timer_count = 0;
+	g_clock_count = 0;
 
 	/* Step 4.4: CSMSIS enable timer0 IRQ */
 	NVIC_EnableIRQ(TIMER0_IRQn);
@@ -114,13 +128,30 @@ __asm void TIMER0_IRQHandler(void)
  */
 void c_TIMER0_IRQHandler(void)
 {
+	PCB *current_process = gp_current_process;
+
+	atomic(ON);
+	is_blocking = FALSE;
+
 	g_timer_count++;
 	g_clock_count++;
 
 	LPC_TIM0->IR = BIT(0);   // ack inttrupt, see section  21.6.1 on pg 493 of LPC17XX_UM
-	// if((g_timer_count)%DELAY_MS == 0) {
-	// 	timer_irq_proc();
-	// }
+
+	gp_current_process->mp_sp = (U32 *) __get_MSP();
+	gp_current_process = gp_pcbs[PID_TIMER_IPROC];
+
+	receiving_proc_unblock = FALSE;
+	uart_timer_proc();
+
+	gp_current_process = current_process;
+
+	is_blocking = TRUE;
+	atomic(OFF);
+
+	if (receiving_proc_unblock) {
+		k_release_processor();
+	}
 }
 
 int get_current_time (void) {

@@ -10,7 +10,7 @@
 #define RTX_OK 0
 #define NULL 0
 #define NUM_TEST_PROCS 6
-#define NUM_PROCS 10
+#define NUM_PROCS 11
 
 //common status values
 #define NULL 0
@@ -114,5 +114,10 @@ extern int _send_message(U32 p_func, int pid, void *p_msg) __SVC_0;
 extern void *k_receive_message(int *p_pid);
 #define receive_message(p_pid) _receive_message((U32)k_receive_message, p_pid)
 extern void *_receive_message(U32 p_func, void *p_pid) __SVC_0;
+
+/* Timing Service */
+extern int k_delayed_send(int pid, void *p_msg, int delay);
+#define delayed_send(pid, p_msg, delay) _delayed_send((U32)k_delayed_send, pid, p_msg, delay)
+extern int _delayed_send(U32 p_func, int pid, void *p_msg, int delay) __SVC_0;
 
 #endif /* !RTX_H_ */

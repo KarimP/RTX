@@ -30,60 +30,82 @@ void k_irq_handler(irq_type type){
 	//k_release_processor();
 }
 
+void uart_timer_proc(void)
+{
+	msg_Node *msg = (msg_Node *)delayed_queue->first;
 
-// void timer_irq_proc(void)
-// {
-// 	queue_node* temp = delayed_queue->first; // check for delayed_queue being NULL
-// 	int i;
-// 	int flag = 0;
-// 	int ans = 0;
-// 	MSG_BUF* expired_message;
-// 	char wall_clock[11];
+    while (msg != NULL) {
+        if (--msg->expire == 0) {
+            dequeue(delayed_queue);
+            k_send_message_with_node(msg);
+            msg = (msg_Node *)delayed_queue->first;
+        } else {
+            msg = msg->next;
+        }
+    }
 
-// 	void *mem_block;
-// 	MSG_BUF* msg;
-// 	int currentTime = get_wall_time();
 
-// 	atomic(ON);
-// 	while(temp != NULL && ((MSG_BUF*)temp)->expire_time <= get_current_time()) {
-// 		expired_message = (MSG_BUF*) dequeue(delayed_queue);
-// 		ans = k_send_delayed_message(expired_message->d_pid, (void*)expired_message);
-// 		temp= temp->next;
-// 		if (ans == 1) {
-// 			flag = 1;
-// 		}
-// 	}
-// 	error--;
-// 	if (error == 0)
-// 	{
-// 		error = 1000/DELAY_MS;
-// 		format_time(wall_clock);
+	// msg_Node *msg = NULL;
 
-// 		mem_block = k_non_blocking_request_memory_block();
-// 		if (mem_block != NULL) {
-// 			msg = (MSG_BUF *)mem_block;
-// 			msg->d_pid = PID_CRT;
+	// for (msg = (msg_Node *) delayed_queue->first; msg != NULL; msg = msg->next) {
+	// 	if (--msg->expire == 0) {
+	// 		dequeue(delayed_queue);
+	// 		k_send_message(msg->d_pid, msg->msgbuf);
+	// 		k_release_memory_block(msg);
+	// 	}
+	// }
 
-// 			for (i = 0; i < BUFF_SIZE; i++)
-// 			{
-// 				msg->mtext[i] = '\0';
-// 			}
-// 			for (i = 0; i < CLOCK_SIZE; i++) {
-// 				msg->mtext[i] = wall_clock[i];
-// 			}
+	// queue_node* temp = delayed_queue->first; // check for delayed_queue being NULL
+	// int i;
+	// int flag = 0;
+	// int ans = 0;
+	// msg_Node* expired_message;
+	// char wall_clock[11];
 
-// 			msg->mtext[CLOCK_SIZE] = '\0';
-// 			msg->mtype = CRT_DISPLAY;
-// 			k_send_message(msg->d_pid,(void *)msg);
-// 		}
-// 	}
-// 	if (flag == 1) {
-// 		atomic(OFF);
-// 		k_release_processor();
-// 		atomic(ON);
-// 	}
-// 	atomic(OFF);
-// }
+	// void *mem_block;
+	// MSG_BUF* msg;
+	// int currentTime = get_wall_time();
+
+	// atomic(ON);
+	// while(temp != NULL && ((msg_Node*)temp)->expire_time <= get_current_time()) {
+	// 	expired_message = (msg_Node*) dequeue(delayed_queue);
+	// 	ans = k_send_delayed_message(expired_message->d_pid, (void*)expired_message);
+	// 	temp= temp->next;
+	// 	if (ans == 1) {
+	// 		flag = 1;
+	// 	}
+	// }
+	// error--;
+	// if (error == 0)
+	// {
+	// 	error = 1000/DELAY_MS;
+	// 	format_time(wall_clock);
+
+	// 	mem_block = k_non_blocking_request_memory_block();
+	// 	if (mem_block != NULL) {
+	// 		msg = (MSG_BUF *)mem_block;
+	// 		msg->d_pid = PID_CRT;
+
+	// 		for (i = 0; i < BUFF_SIZE; i++)
+	// 		{
+	// 			msg->mtext[i] = '\0';
+	// 		}
+	// 		for (i = 0; i < CLOCK_SIZE; i++) {
+	// 			msg->mtext[i] = wall_clock[i];
+	// 		}
+
+	// 		msg->mtext[CLOCK_SIZE] = '\0';
+	// 		msg->mtype = CRT_DISPLAY;
+	// 		k_send_message(msg->d_pid,(void *)msg);
+	// 	}
+	// }
+	// if (flag == 1) {
+	// 	atomic(OFF);
+	// 	k_release_processor();
+	// 	atomic(ON);
+	// }
+	// atomic(OFF);
+}
 
 void uart_irq_proc(char key)
 {
@@ -99,9 +121,6 @@ void uart_irq_proc(char key)
 
 	#ifdef DEBUG_HOTKEYS
 	switch (key) { // printing process list and memory blocks available still left
-		// case '\r':
-		// 	enter = 1;
-		// 	break;
 		case '!':
 			print_ready_procs();
 			forward_to_kcd = FALSE;
@@ -134,7 +153,11 @@ void uart_irq_proc(char key)
 		buf = msg->mtext;
 
 		while (*buf != '\0') {
-			pUart->THR = *(buf++);
+			pUart->THR = *(buf);
+
+			if (*(buf++) == '\r') {
+				pUart->THR = '\n';
+			}
 		}
 		k_release_memory_block(msg);
 
@@ -199,3 +222,4 @@ void uart_irq_proc(char key)
 // 		k_release_processor();
 // 	}
 // }
+

@@ -29,7 +29,8 @@ void atomic(int);
 
 int k_send_message(int, void*);
 void *k_receive_message(int*);
-int k_send_delayed_message(int, void*, int);
+int k_delayed_send(int, void*, int);
+int k_send_message_with_node(msg_Node*);
 PCB* get_pcb_from_pid(int);
 int k_release_processor_irq(int);
 
