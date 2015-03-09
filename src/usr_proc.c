@@ -103,25 +103,25 @@ void proc1(void)
 {
 
 	int i = 0;
-  	int sender_id = -1;
+  int sender_id = -1;
 	MSG_BUF *msg = NULL;
 	MSG_BUF *receive_msg = NULL;
 	msg = (MSG_BUF *)request_memory_block();
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
 	msg->mtext[1] = 'W';
-	delayed_send(PID_KCD, msg, 2);
+	delayed_send(PID_KCD, msg, 200);
 
-	msg = (MSG_BUF *)request_memory_block();
-	msg->mtype = CRT_REG;
-	msg->mtext[0] = 'h';
-	msg->mtext[1] = 'i';
-	msg->mtext[2] = 'i';
-	msg->mtext[3] = ':';
-	msg->mtext[4] = ')';
-	msg->mtext[5] = '\n';
-	msg->mtext[6] = '\0';
-	delayed_send(2, msg, 20000);
+	// msg = (MSG_BUF *)request_memory_block();
+	// msg->mtype = CRT_REG;
+	// msg->mtext[0] = 'h';
+	// msg->mtext[1] = 'i';
+	// msg->mtext[2] = 'i';
+	// msg->mtext[3] = ':';
+	// msg->mtext[4] = ')';
+	// msg->mtext[5] = '\n';
+	// msg->mtext[6] = '\0';
+	// delayed_send(2, msg, 500);
 
 	while (TRUE) {
 		receive_msg = (MSG_BUF *)receive_message(&sender_id);
@@ -144,7 +144,7 @@ void proc1(void)
   //       uart1_put_string("\n\r");
   //       release_memory_block(msg);
 
-        printTestResults(TRUE);
+  //       printTestResults(TRUE);
         //release_processor();
 	}
 }
@@ -158,9 +158,21 @@ void proc2(void)
 	MSG_BUF *msg = NULL;
 	int i = 0;
 	int sender_id = -1;
-	while (TRUE) {
 
-		printf("proc2 running\n");
+	printf("proc2 running\n");
+
+	// msg = (MSG_BUF *)request_memory_block();
+	// msg->mtype = CRT_REG;
+	// msg->mtext[0] = 'h';
+	// msg->mtext[1] = 'i';
+	// msg->mtext[2] = 'i';
+	// msg->mtext[3] = ':';
+	// msg->mtext[4] = ')';
+	// msg->mtext[5] = '\n';
+	// msg->mtext[6] = '\0';
+	// delayed_send(1, msg, 2);
+
+	while (TRUE) {		
 
 		msg = (MSG_BUF *)receive_message(&sender_id);
 

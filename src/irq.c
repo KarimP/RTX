@@ -8,7 +8,6 @@
 #include <LPC17xx.h>
 
 extern void atomic(int);
-extern int is_blocking;
 
 #define BUFF_SIZE 100
 uint8_t input_buffer[BUFF_SIZE] = "";
@@ -137,17 +136,17 @@ void uart_irq_proc(char key)
 	#endif
 
 	if (forward_to_kcd) {
-		msg = (MSG_BUF *) k_request_memory_block();
+		msg = (MSG_BUF *) k_non_blocking_request_memory_block();
 		if (msg) {
 			msg->mtype = UART_INPUT;
 			msg->mtext[0] = key;
 			msg->mtext[1] = '\0';
 
-			k_send_message(PID_KCD, msg);
+			k_non_blocking_send_message(PID_KCD, msg);
 		}
 	}
 
-	msg = (MSG_BUF *) k_receive_message(&sender_id);
+	msg = (MSG_BUF *) k_non_blocking_receive_message(&sender_id);
 
 	while (msg != NULL) {
 		buf = msg->mtext;
@@ -159,9 +158,9 @@ void uart_irq_proc(char key)
 				pUart->THR = '\n';
 			}
 		}
-		k_release_memory_block(msg);
+		k_non_blocking_release_memory_block(msg);
 
-		msg = (MSG_BUF *) k_receive_message(&sender_id);
+		msg = (MSG_BUF *) k_non_blocking_receive_message(&sender_id);
 	}
 }
 

@@ -38,7 +38,6 @@ extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
 
-int is_blocking = TRUE;
 int receiving_proc_unblock = TRUE;
 
 /**
@@ -91,9 +90,6 @@ void process_init()
 
 void atomic (int toggle)
 {
-	if (!is_blocking) {
-		return;
-	}
 	if (toggle) {
 		__disable_irq();
 	}
@@ -251,14 +247,7 @@ int k_send_message_with_node(msg_Node *msg) {
 	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
 		//set state to ready, and move from blocked queue to ready queue
         ready_process(receiving_proc, msg->d_pid);
-
-        if (is_blocking) {
-        	atomic(OFF);
-			k_release_processor();
-			atomic(ON);
-        } else {
-        	receiving_proc_unblock = TRUE;
-        }
+    	receiving_proc_unblock = TRUE;
 	}
 
 	atomic(OFF);
@@ -267,6 +256,7 @@ int k_send_message_with_node(msg_Node *msg) {
 
 int k_send_message(int receiving_pid, void *message_envelope)
 {
+	PCB* receiving_proc = NULL;
 	msg_Node *msg;
 	atomic(ON);
 
@@ -274,14 +264,65 @@ int k_send_message(int receiving_pid, void *message_envelope)
 		return RTX_ERR;
 	}
 
-	msg = k_request_memory_block();
+	msg = k_non_blocking_request_memory_block();
+
+	if (msg == NULL) {
+		return RTX_ERR;
+	}
+
 	msg->next = NULL;
 	msg->d_pid = receiving_pid;
 	msg->s_pid = gp_current_process->m_pid;
 	msg->msgbuf = message_envelope;
 
+	receiving_proc = get_pcb_from_pid(msg->d_pid);
+
+	enqueue(receiving_proc->msg_q, (queue_node*) msg);
+
+	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
+		//set state to ready, and move from blocked queue to ready queue
+        ready_process(receiving_proc, msg->d_pid);
+
+    	atomic(OFF);
+		k_release_processor();
+		atomic(ON);
+	}
+
 	atomic(OFF);
-	return k_send_message_with_node(msg);
+	return RTX_OK;
+}
+
+int k_non_blocking_send_message(int receiving_pid, void *message_envelope)
+{
+	PCB* receiving_proc = NULL;
+	msg_Node *msg;
+
+	if (message_envelope == NULL) {
+		return RTX_ERR;
+	}
+
+	msg = k_non_blocking_request_memory_block();
+
+	if (msg == NULL) {
+		return RTX_ERR;
+	}
+
+	msg->next = NULL;
+	msg->d_pid = receiving_pid;
+	msg->s_pid = gp_current_process->m_pid;
+	msg->msgbuf = message_envelope;
+
+	receiving_proc = get_pcb_from_pid(msg->d_pid);
+
+	enqueue(receiving_proc->msg_q, (queue_node*) msg);
+
+	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
+		//set state to ready, and move from blocked queue to ready queue
+        ready_process(receiving_proc, msg->d_pid);
+        receiving_proc_unblock = TRUE;
+	}
+
+	return RTX_OK;
 }
 
 int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
@@ -298,7 +339,7 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 
 	atomic(ON);
 
-	new_msg = k_request_memory_block();
+	new_msg = k_non_blocking_request_memory_block();
 	new_msg->next = NULL;
 	new_msg->d_pid = receiving_pid;
 	new_msg->s_pid = gp_current_process->m_pid;
@@ -336,7 +377,7 @@ void *k_receive_message(int *sender_id)
 
 	atomic(ON);
 
-	while(isEmpty(gp_current_process->msg_q) && is_blocking) {
+	while(isEmpty(gp_current_process->msg_q)) {
         block_process(gp_current_process, gp_current_process->m_pid, BLOCKED_ON_RECEIVE);
 
     	atomic(OFF);
@@ -353,6 +394,22 @@ void *k_receive_message(int *sender_id)
 	}
 
 	atomic(OFF);
+
+	return msgbuf;
+}
+
+void *k_non_blocking_receive_message(int *sender_id)
+{
+	msg_Node* msg = NULL;
+	void *msgbuf = NULL;
+
+	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
+
+	if (msg != NULL) {
+		*sender_id = (int)msg->s_pid;
+		msgbuf = msg->msgbuf;
+		k_non_blocking_release_memory_block((void *) msg);
+	}
 
 	return msgbuf;
 }

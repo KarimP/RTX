@@ -21,7 +21,6 @@ volatile uint32_t g_timer_count = 0; // increment every 1 ms
 volatile uint32_t g_clock_count = 0; // increment every 1 ms
 int error;
 
-extern int is_blocking;
 extern int receiving_proc_unblock;
 extern PCB **gp_pcbs;
 extern PROC_INIT g_proc_table[NUM_PROCS];
@@ -131,14 +130,13 @@ void c_TIMER0_IRQHandler(void)
 	PCB *current_process = gp_current_process;
 
 	atomic(ON);
-	is_blocking = FALSE;
 
 	g_timer_count++;
-	g_clock_count++;
+	// g_clock_count++;
 
 	LPC_TIM0->IR = BIT(0);   // ack inttrupt, see section  21.6.1 on pg 493 of LPC17XX_UM
 
-	gp_current_process->mp_sp = (U32 *) __get_MSP();
+	// gp_current_process->mp_sp = (U32 *) __get_MSP();
 	gp_current_process = gp_pcbs[PID_TIMER_IPROC];
 
 	receiving_proc_unblock = FALSE;
@@ -146,7 +144,6 @@ void c_TIMER0_IRQHandler(void)
 
 	gp_current_process = current_process;
 
-	is_blocking = TRUE;
 	atomic(OFF);
 
 	if (receiving_proc_unblock) {

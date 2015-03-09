@@ -30,6 +30,7 @@ U32 *alloc_stack(U32 size_b);
 void *k_request_memory_block(void);
 void *k_non_blocking_request_memory_block(void);
 int k_release_memory_block(void *);
+int k_non_blocking_release_memory_block(void *);
 int setup_heap(void);
 
 #endif /* ! K_MEM_H_ */

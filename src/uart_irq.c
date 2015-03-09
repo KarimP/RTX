@@ -15,7 +15,6 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
-extern int is_blocking;
 // extern int iprocess_switch;
 extern PCB **gp_pcbs;
 extern PROC_INIT g_proc_table[NUM_PROCS];
@@ -155,15 +154,13 @@ int uart_irq_init(int n_uart) {
 void UART_IProcessHandler(char key)
 {
 	PCB *current_process = gp_current_process;
-	gp_current_process->mp_sp = (U32 *) __get_MSP();
+	// gp_current_process->mp_sp = (U32 *) __get_MSP();
 	gp_current_process = gp_pcbs[PID_UART_IPROC];
 
 	atomic(ON);
-	is_blocking = FALSE;
 
 	uart_irq_proc(key);
 
-	is_blocking = TRUE;
 	atomic(OFF);
 
 	gp_current_process = current_process;

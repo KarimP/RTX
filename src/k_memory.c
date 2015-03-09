@@ -62,7 +62,6 @@ extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
 
 extern queue *delayed_queue;
-extern int is_blocking;
 
 void memory_init(void)
 {
@@ -254,6 +253,7 @@ U32 *alloc_stack(U32 size_b)
 
 // 	return blk + 1;
 // }
+
 void *k_request_memory_block(void)
 {
 	int process_priority;
@@ -265,7 +265,7 @@ void *k_request_memory_block(void)
 
 	atomic(ON);
 
-	while (blk == NULL && is_blocking) {
+	while (blk == NULL) {
 
 		process_priority = k_get_process_priority(gp_current_process->m_pid);
 		pop_queue(ready_queue, gp_current_process->m_pid, process_priority);
@@ -298,10 +298,7 @@ void *k_non_blocking_request_memory_block(void)
 	printf("k_non_blocking_request_memory_block: entering...\n\r");
 	#endif /* ! DEBUG_1 */
 
-	atomic(ON);
-
 	if (blk == NULL ) {
-		atomic(OFF);
 		return NULL;
 	}
 
@@ -309,7 +306,6 @@ void *k_non_blocking_request_memory_block(void)
 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
 	#endif /* ! DEBUG_1 */
 
-	atomic(OFF);
 	return blk + 1;
 }
 
@@ -350,29 +346,62 @@ int k_release_memory_block(void *p_mem_blk)
 				pop_queue(blocked_queue, pcb->m_pid, i);
 				enqueue_priority_queue(ready_queue, pcb, i);
 				pcb->m_state = RDY;
-				if (i > k_get_process_priority(gp_current_process->m_pid) && is_blocking) {
+				if (i > k_get_process_priority(gp_current_process->m_pid)) {
 					atomic(OFF);
 					k_release_processor();
 					atomic(ON);
 				}
 			}
 		}
-		// pcb = dequeue_priority_queue(blocked_queue, i);
-		// if (pcb != NULL) {
-		// 	pcb->m_state = RDY;
-		// 	enqueue_priority_queue(ready_queue, pcb, i);
-		// 	if (i > k_get_process_priority(gp_current_process->m_pid) && is_blocking) {
-		// 		atomic(OFF);
-		// 		k_release_processor();
-		// 		atomic(ON);
-		// 	}
-		// 	break;
-		// }
 	}
 
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: exiting...\n\rheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\r\n\r", heap_q->first, heap_q->first->next);
 	#endif /* ! DEBUG_1 */
 	atomic(OFF);
+	return RTX_OK;
+}
+
+/**
+ * @brief deallocates the passed in memory block if it is possible to do so
+ * @return RTX_ERR on error and RTX_OK on success
+ */
+int k_non_blocking_release_memory_block(void *p_mem_blk)
+{
+	mem_blk rel_blk = (mem_blk)p_mem_blk - 1;
+	int i = 0;
+	PCB *pcb = NULL;
+
+	int a = (p_mem_blk == NULL);
+	int b = ((U8 *)rel_blk < p_end);
+	int c = ((U8 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack);
+	int d = ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0);
+
+	#ifdef DEBUG_1
+	printf("k_release_memory_block: releasing block @ 0x%x \n\r", p_mem_blk);
+	#endif /* ! DEBUG_1 */
+
+	if ( a || b || c || d ) {
+		return RTX_ERR;
+	}
+
+	if (enqueue(heap_q, rel_blk) != RTX_OK) {
+		return RTX_ERR;
+	}
+
+	// removed highest priority blocked process that requested memory previously
+	for (i = 0; i < NUM_PRIORITIES; ++i) {
+		for (pcb = blocked_queue[i]->first; pcb != NULL; pcb = pcb->mp_next) {
+			if (pcb->m_state == BLOCKED_ON_RESOURCE) {
+				pop_queue(blocked_queue, pcb->m_pid, i);
+				enqueue_priority_queue(ready_queue, pcb, i);
+				pcb->m_state = RDY;
+			}
+		}
+	}
+
+	#ifdef DEBUG_1
+	printf("k_release_memory_block: exiting...\n\rheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\r\n\r", heap_q->first, heap_q->first->next);
+	#endif /* ! DEBUG_1 */
 	return RTX_OK;
 }

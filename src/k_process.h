@@ -28,7 +28,9 @@ int k_release_processor(void);           /* kernel release_process function */
 void atomic(int);
 
 int k_send_message(int, void*);
+int k_non_blocking_send_message(int, void*);
 void *k_receive_message(int*);
+void *k_non_blocking_receive_message(int*);
 int k_delayed_send(int, void*, int);
 int k_send_message_with_node(msg_Node*);
 PCB* get_pcb_from_pid(int);
