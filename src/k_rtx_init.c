@@ -16,7 +16,7 @@ void k_rtx_init(void)
 	//timer_init(0);
 
     uart0_irq_init();
-    uart0_init(); //polling, for DEBUGGING
+    // uart0_init(); //polling, for DEBUGGING
     uart1_init(); //polling, for DEBUGGING
 
     memory_init();

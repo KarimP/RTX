@@ -15,12 +15,13 @@
 #include "printf.h"
 #endif
 
-uint8_t g_buffer[]= "";//"You Typed a Q\n\r";
-uint8_t *gp_buffer = g_buffer;
-
-extern PCB *gp_current_process;
-extern PCB **gp_pcbs;
 extern int is_blocking;
+// extern int iprocess_switch;
+extern PCB **gp_pcbs;
+extern PROC_INIT g_proc_table[NUM_PROCS];
+extern PCB *gp_current_process;
+
+extern void atomic(int);
 
 /**
  * @brief: initialize the n_uart
@@ -162,10 +163,29 @@ void UART_IProcessHandler(char key)
 
 	uart_irq_proc(key);
 
-	gp_current_process = current_process;
-
 	is_blocking = TRUE;
 	atomic(OFF);
+
+	gp_current_process = current_process;
+
+	// MSG_BUF *msg = NULL;
+
+	// atomic(ON);
+	// is_blocking = FALSE;
+
+	// msg = (MSG_BUF *)k_request_memory_block();
+	// if (msg != NULL) {
+	// 	msg->mtype = UART_INPUT;
+	// 	msg->mtext[0] = key;
+	// 	msg->mtext[1] = '\0';
+	// }
+
+	// k_send_message(PID_UART_IPROC, msg);
+	// iprocess_switch = PID_UART_IPROC;
+
+	// is_blocking = TRUE;
+	// atomic(OFF);
+
 	k_release_processor();
 }
 
@@ -179,28 +199,28 @@ void UART_IProcessHandler(char key)
 __asm void UART0_IRQHandler(void)
 {
 	PRESERVE8
-	IMPORT c_UART_IRQHandler
+	IMPORT c_UART0_IRQHandler
 	PUSH{r4-r11, lr}
-	BL c_UART_IRQHandler
+	BL c_UART0_IRQHandler
 	POP{r4-r11, pc}
 }
 
 __asm void UART1_IRQHandler(void)
 {
 	PRESERVE8
-	IMPORT c_UART_IRQHandler
+	IMPORT c_UART0_IRQHandler
 	PUSH{r4-r11, lr}
-	BL c_UART_IRQHandler
+	BL c_UART0_IRQHandler
 	POP{r4-r11, pc}
 }
 
 /**
  * @brief: c UART0 IRQ Handler
  */
-void c_UART_IRQHandler(void)
+void c_UART0_IRQHandler(void)
 {
 	uint8_t IIR_IntId;	    // Interrupt ID from IIR
-	uint8_t g_char_in, g_char_out;
+	uint8_t g_char_in;
 	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART0;
 
 #ifdef DEBUG_1
@@ -213,33 +233,18 @@ void c_UART_IRQHandler(void)
 		/* read UART. Read RBR will clear the interrupt */
 		g_char_in = pUart->RBR;
 
-		#ifdef DEBUG_1
-		uart1_put_string("Reading a char = ");
-		uart1_put_char(g_char_in);
-		uart1_put_string("\n\r");
-		#endif // DEBUG_1
-
 		//call iprocess hander for uart
 		UART_IProcessHandler(g_char_in);
 
-		g_buffer[12] = g_char_in; // nasty hack
-
 	} else if (IIR_IntId & IIR_THRE) {
 		/* THRE Interrupt, transmit holding register becomes empty */
-		if (*gp_buffer != '\0' ) {
-			g_char_out = *gp_buffer;
-			pUart->THR = g_char_out;
-			gp_buffer++;
-		} else {
 
-			#ifdef DEBUG_1
-			uart1_put_string("Finish writing. Turning off IER_THRE\n\r");
-			#endif // DEBUG_1
+		#ifdef DEBUG_1
+		uart1_put_string("Finish writing. Turning off IER_THRE\n\r");
+		#endif // DEBUG_1
 
-			pUart->IER ^= IER_THRE; // toggle the IER_THRE bit
-			pUart->THR = '\0';
-			gp_buffer = g_buffer;
-		}
+		pUart->IER ^= IER_THRE; // toggle the IER_THRE bit
+		pUart->THR = '\0';
 
 	} else {  /* not implemented yet */
 		#ifdef DEBUG_1

@@ -2,11 +2,13 @@
  * @brief: uart_polling.c, polling UART to send and receive data
  * @author: SE350 G017
  * @date: 2015/02/03
- * NOTE: the code only handles UART0 for now. 
+ * NOTE: the code only handles UART0 for now.
  */
 
 #include <LPC17xx.h>
 #include "uart_polling.h"
+
+int active_uart = 1;
 
 
 /**
@@ -22,20 +24,20 @@ int uart_init(int n_uart) {
   if (n_uart == 0 ) {
     /*
     Step 1: system control configuration
-     
+
     step 1a: power control configuration, table 46 pg63
     enable UART0 power, this is the default setting
     also already done in system_LPC17xx.c
-    enclose the code below for reference 
+    enclose the code below for reference
     LPC_SC->PCONP |= BIT(3);
-  
-    
+
+
     step 1b: select the clock source, default PCLK=CCLK/4 , where CCLK = 100MHZ.
     tables 40 and 42  on pg56 and pg57
     Check the PLL0 configuration to see how XTAL=12.0MHZ gets to CCLK=100MHZ
     in system_LPC17xx.c file
     enclose code below for reference
-    LPC_SC->PCLKSEL0 &= ~(BIT(7)|BIT(6));  // PCLK = CCLK/4, default setting after reset  
+    LPC_SC->PCLKSEL0 &= ~(BIT(7)|BIT(6));  // PCLK = CCLK/4, default setting after reset
 
     Step 2: Pin Ctrl Block configuration for TXD and RXD
     Listed as item #5 in LPC_17xxum UART0/2/3 manual pag298
@@ -44,19 +46,22 @@ int uart_init(int n_uart) {
     LPC_PINCON->PINSEL0 |= (1 << 6);    /* Pin P0.3 used as RXD0 (Com0) */
 
     pUart = (LPC_UART_TypeDef *) LPC_UART0;
-    
+    active_uart = 0;
+
   } else if (n_uart == 1) {
     LPC_PINCON->PINSEL4 |= (2 << 0);    /* Pin P2.0 used as TXD1 (Com1) */
     LPC_PINCON->PINSEL4 |= (2 << 2);    /* Pin P2.1 used as RXD1 (Com1) */
 
     pUart = (LPC_UART_TypeDef *) LPC_UART1;
 
+    active_uart = 1;
+
   } else {
     return -1;   /* not supported yet */
-  } 
+  }
 
   /* Step 3: Transmission Configuration */
-  
+
   /* step 3a: DLAB=1, 8N1 */
   pUart->LCR    = UART_8N1;
 
@@ -74,7 +79,7 @@ int uart_init(int n_uart) {
 /**
  * @brief: read a char from the n_uart, blocking read
  */
-     
+
 int uart_get_char(int n_uart)
 {
   LPC_UART_TypeDef *pUart;
@@ -88,14 +93,14 @@ int uart_get_char(int n_uart)
   }
 
   /* polling the LSR RDR (Receiver Data Ready) bit to wait it is not empty */
-  while (!(pUart->LSR & LSR_RDR)); 
-  return (pUart->RBR); 
+  while (!(pUart->LSR & LSR_RDR));
+  return (pUart->RBR);
 }
 
 /**
  * @brief: write a char c to the n_uart
  */
-  
+
 int uart_put_char(int n_uart, unsigned char c)
 {
   LPC_UART_TypeDef *pUart;
@@ -109,7 +114,7 @@ int uart_put_char(int n_uart, unsigned char c)
   }
 
   /* polling LSR THRE bit to wait it is empty */
-  while (!(pUart->LSR & LSR_THRE)); 
+  while (!(pUart->LSR & LSR_THRE));
   return (pUart->THR = c);  /* write c to the THR */
 }
 
@@ -131,9 +136,17 @@ int uart_put_string(int n_uart, unsigned char *s)
  */
 void putc(void *p, char c)
 {
-  if ( p != NULL ) {
-    uart0_put_string("putc: first parameter needs to be NULL");
+  if (p != NULL) {
+    if (active_uart == 0) {
+      uart0_put_string("putc: first parameter needs to be NULL");
+    } else {
+      uart1_put_string("putc: first parameter needs to be NULL");
+    }
   } else {
+    if (active_uart == 0) {
       uart0_put_char(c);
+    } else {
+      uart1_put_char(c);
+    }
   }
 }

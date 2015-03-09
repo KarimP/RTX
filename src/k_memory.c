@@ -345,17 +345,29 @@ int k_release_memory_block(void *p_mem_blk)
 
 	// removed highest priority blocked process that requested memory previously
 	for (i = 0; i < NUM_PRIORITIES; ++i) {
-		pcb = dequeue_priority_queue(blocked_queue, i);
-		if (pcb != NULL) {
-			pcb->m_state = RDY;
-			enqueue_priority_queue(ready_queue, pcb, i);
-			if (i > k_get_process_priority(gp_current_process->m_pid) && is_blocking) {
-				atomic(OFF);
-				k_release_processor();
-				atomic(ON);
+		for (pcb = blocked_queue[i]->first; pcb != NULL; pcb = pcb->mp_next) {
+			if (pcb->m_state == BLOCKED_ON_RESOURCE) {
+				pop_queue(blocked_queue, pcb->m_pid, i);
+				enqueue_priority_queue(ready_queue, pcb, i);
+				pcb->m_state = RDY;
+				if (i > k_get_process_priority(gp_current_process->m_pid) && is_blocking) {
+					atomic(OFF);
+					k_release_processor();
+					atomic(ON);
+				}
 			}
-			break;
 		}
+		// pcb = dequeue_priority_queue(blocked_queue, i);
+		// if (pcb != NULL) {
+		// 	pcb->m_state = RDY;
+		// 	enqueue_priority_queue(ready_queue, pcb, i);
+		// 	if (i > k_get_process_priority(gp_current_process->m_pid) && is_blocking) {
+		// 		atomic(OFF);
+		// 		k_release_processor();
+		// 		atomic(ON);
+		// 	}
+		// 	break;
+		// }
 	}
 
 	#ifdef DEBUG_1

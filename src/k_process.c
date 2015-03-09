@@ -39,6 +39,7 @@ extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
 
 int is_blocking = TRUE;
+// int iprocess_switch = FALSE;
 
 int release_proc(int);
 
@@ -92,6 +93,9 @@ void process_init()
 
 void atomic (int toggle)
 {
+	if (!is_blocking) {
+		return;
+	}
 	if (toggle) {
 		__disable_irq();
 	}
@@ -187,7 +191,17 @@ int k_release_processor(void)
 	PCB *p_pcb_old = NULL;
 
 	p_pcb_old = gp_current_process;
-	gp_current_process = scheduler();
+
+	// if (iprocess_switch) {
+	// 	gp_current_process = gp_pcbs[iprocess_switch];
+	// 	iprocess_switch = FALSE;
+	// 	atomic(ON);
+	// 	is_blocking = FALSE;
+	// } else {
+		// is_blocking = TRUE;
+		// atomic(OFF);
+		gp_current_process = scheduler();
+	// }
 
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = p_pcb_old; // revert back to the old process
@@ -277,7 +291,7 @@ int k_send_delayed_message(int receiving_pid, void *message_envelope, int delay)
 		return RTX_ERR;
 	}
 
-	//atomic(ON);
+	atomic(ON);
 
 	msg = k_request_memory_block();
 	receiving_proc = get_pcb_from_pid(receiving_pid);
@@ -285,6 +299,7 @@ int k_send_delayed_message(int receiving_pid, void *message_envelope, int delay)
 	msg->next = NULL;
 	msg->d_pid = receiving_pid;
 	msg->s_pid = gp_current_process->m_pid;
+	msg->expire_time = delay;
 	msg->msgbuf = message_envelope;
 
 	enqueue(receiving_proc->msg_q, (queue_node*) msg);
@@ -293,31 +308,29 @@ int k_send_delayed_message(int receiving_pid, void *message_envelope, int delay)
 		//set state to ready, and move from blocked queue to ready queue
         ready_process(receiving_proc, receiving_pid);
 
-        //atomic(OFF);
-		//k_release_processor();
-		//atomic(ON);
+        atomic(OFF);
+		k_release_processor();
+		atomic(ON);
 		return 1;
 	}
 
-	//atomic(OFF);
+	atomic(OFF);
 	return 0;
 }
 
-void *get_message(int *sender_id, int block)
+void *k_receive_message(int *sender_id)
 {
 	msg_Node* msg = NULL;
 	void *msgbuf = NULL;
 
 	atomic(ON);
 
-	while(isEmpty(gp_current_process->msg_q) && block) {
+	while(isEmpty(gp_current_process->msg_q) && is_blocking) {
         block_process(gp_current_process, gp_current_process->m_pid, BLOCKED_ON_RECEIVE);
 
-        if (is_blocking) {
-        	atomic(OFF);
-			k_release_processor();
-			atomic(ON);
-        }
+    	atomic(OFF);
+		k_release_processor();
+		atomic(ON);
 	}
 
 	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
@@ -332,17 +345,6 @@ void *get_message(int *sender_id, int block)
 
 	return msgbuf;
 }
-
-void *k_receive_message(int *sender_id)
-{
-	return get_message(sender_id, TRUE);
-}
-
-void *k_receive_message_non_block(int *sender_id)
-{
-	return get_message(sender_id, FALSE);
-}
-
 
 // Debug Functions
 void print_ready_procs(void)

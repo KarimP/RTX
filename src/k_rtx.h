@@ -53,13 +53,11 @@
 #define DEFAULT 0
 #define KCD_REG 1
 #define UART_INPUT 2
-
+#define CLOCK_REG 3
 #define CRT_DISPLAY 4
 #define CRT_ON 5
 #define CRT_OFF 6
 #define CRT_REG 7
-
-#define CLOCK_REG 3
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */
@@ -104,6 +102,7 @@ typedef struct msgbuf
 {
     int mtype;              /* user defined message type */
     char mtext[MEM_BLK_SIZE - sizeof(int)];          /* body of the message */
+
 } MSG_BUF;
 
 

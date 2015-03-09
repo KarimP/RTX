@@ -30,7 +30,7 @@
 #define CRT_ON 5
 #define CRT_OFF 6
 #define CRT_REG 7
- 
+
 #define CLOCK_REG 3
 
 /* Process IDs */
@@ -83,9 +83,9 @@ extern int k_release_processor(void);
 #define release_processor() _release_processor((U32)k_release_processor)
 extern int __SVC_0 _release_processor(U32 p_func);
 
-extern void *k_non_blocking_request_memory_block(void);
-#define non_blocking_request_memory_block() _non_blocking_request_memory_block((U32)k_non_blocking_request_memory_block)
-extern void *_non_blocking_request_memory_block(U32 p_func) __SVC_0;
+// extern void *k_non_blocking_request_memory_block(void);
+// #define non_blocking_request_memory_block() _non_blocking_request_memory_block((U32)k_non_blocking_request_memory_block)
+// extern void *_non_blocking_request_memory_block(U32 p_func) __SVC_0;
 /* __SVC_0 can also be put at the end of the function declaration */
 
 extern void *k_request_memory_block(void);

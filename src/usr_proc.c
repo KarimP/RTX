@@ -106,7 +106,7 @@ void proc1(void)
 {
 
 	int i = 0;
-  int sender_id = -1;
+  	int sender_id = -1;
 	MSG_BUF *msg = NULL;
 	MSG_BUF *receive_msg = NULL;
 	msg = (MSG_BUF *)request_memory_block();
@@ -115,16 +115,16 @@ void proc1(void)
 	msg->mtext[1] = 'W';
 	msg = (MSG_BUF *)send_message(PID_KCD, msg);
 
-	msg = (MSG_BUF *)request_memory_block();
-	msg->mtype = CRT_REG;
-	msg->mtext[0] = 'h';
-	msg->mtext[1] = 'i';
-	msg->mtext[2] = 'i';
-	msg->mtext[3] = ':';
-	msg->mtext[4] = ')';
-	msg->mtext[5] = '\n';
-	msg->mtext[6] = '\0';
-	send_message(PID_CRT, msg);
+	// msg = (MSG_BUF *)request_memory_block();
+	// msg->mtype = CRT_REG;
+	// msg->mtext[0] = 'h';
+	// msg->mtext[1] = 'i';
+	// msg->mtext[2] = 'i';
+	// msg->mtext[3] = ':';
+	// msg->mtext[4] = ')';
+	// msg->mtext[5] = '\n';
+	// msg->mtext[6] = '\0';
+	// send_message(PID_CRT, msg);
 
 	while (TRUE) {
 		receive_msg = (MSG_BUF *)receive_message(&sender_id);
@@ -135,7 +135,7 @@ void proc1(void)
 				printf("%c", receive_msg->mtext[i]);
 			}
 
-			uart0_put_string("\n");
+			uart1_put_string("\n");
 		}
 		release_memory_block(receive_msg);
   //       msg = (MSG_BUF *)receive_message(&sender_id);
@@ -144,11 +144,11 @@ void proc1(void)
 		// for (i = 0; i < 4; ++i) {
 		// 	printf("%c", msg->mtext[i]);
 		// }
-  //       uart0_put_string("\n\r");
+  //       uart1_put_string("\n\r");
   //       release_memory_block(msg);
 
         printTestResults(TRUE);
-        release_processor();
+        //release_processor();
 	}
 }
 
@@ -164,24 +164,24 @@ void proc2(void)
 
 		//void *blk = request_memory_block();
 
-		for(i = 0; i < 6; i++) {
-			msg = (MSG_BUF *)request_memory_block();
-			msg->mtype = UART_INPUT;
-			if(i==0)
-				msg->mtext[0] = '%';
-			else if(i==1)
-				msg->mtext[0] = 'W';
-			else if(i==2)
-				msg->mtext[0] = 'A';
-			else if(i==3)
-				msg->mtext[0] = ' ';
-			else if(i==4)
-				msg->mtext[0] = 'B';
-			else if(i==5)
-				msg->mtext[0] = '\n';
+		// for(i = 0; i < 6; i++) {
+		// 	msg = (MSG_BUF *)request_memory_block();
+		// 	msg->mtype = UART_INPUT;
+		// 	if(i==0)
+		// 		msg->mtext[0] = '%';
+		// 	else if(i==1)
+		// 		msg->mtext[0] = 'W';
+		// 	else if(i==2)
+		// 		msg->mtext[0] = 'A';
+		// 	else if(i==3)
+		// 		msg->mtext[0] = ' ';
+		// 	else if(i==4)
+		// 		msg->mtext[0] = 'B';
+		// 	else if(i==5)
+		// 		msg->mtext[0] = '\n';
 
-			send_message(PID_KCD, msg);
-		}
+		// 	send_message(PID_KCD, msg);
+		// }
 
 
 
