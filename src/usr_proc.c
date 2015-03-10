@@ -108,7 +108,31 @@ void proc1(void)
 	msg = (MSG_BUF *)request_memory_block();
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
+	msg->mtext[1] = 'W';
+	msg->mtext[2] = 'T';
+	msg->mtext[3] = '\0';
+	delayed_send(PID_KCD, msg, 50);
+
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = KCD_REG;
+	msg->mtext[0] = '%';
+	msg->mtext[1] = 'W';
+	msg->mtext[2] = '\0';
+	delayed_send(PID_KCD, msg, 50);
+
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = KCD_REG;
+	msg->mtext[0] = '%';
+	msg->mtext[1] = 'W';
+	msg->mtext[2] = 'T';
+	msg->mtext[3] = '\0';
+	delayed_send(PID_KCD, msg, 50);
+
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = KCD_REG;
+	msg->mtext[0] = '%';
 	msg->mtext[1] = 'R';
+	msg->mtext[2] = '\0';
 	delayed_send(PID_KCD, msg, 50);
 	
 	msg = (MSG_BUF *)request_memory_block();
@@ -131,7 +155,7 @@ void proc1(void)
 				printf("%c", receive_msg->mtext[i]);
 			}
 
-			uart1_put_string("\n");
+			uart1_put_string("\r\n");
 		}
 		release_memory_block(receive_msg);
   //       msg = (MSG_BUF *)receive_message(&sender_id);
@@ -168,7 +192,7 @@ void proc2(void)
 		for (i = 0; i < 6; ++i) {
 			printf("%c", msg->mtext[i]);
 		}
-        uart1_put_string("\n\r");
+        uart1_put_string("\r\n");
         release_memory_block(msg);
 
 		// void *blk = request_memory_block();
