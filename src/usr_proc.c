@@ -108,7 +108,7 @@ void proc1(void)
 	msg = (MSG_BUF *)request_memory_block();
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
-	msg->mtext[1] = 'R';
+	msg->mtext[1] = 'W';
 	delayed_send(PID_KCD, msg, 50);
 	
 	msg = (MSG_BUF *)request_memory_block();

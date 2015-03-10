@@ -178,7 +178,7 @@ int setup_heap(void)
 		if ((U32*)heap_q->last + MEM_BLK_SIZE >= gp_stack) break;
 	}
 
-	#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("We have %d memory blocks\n\r", i);
 	printf("heap_q->first = 0x%x \n\r", heap_q->first);
 	printf("heap_q->last = 0x%x \n\r", heap_q->last);
