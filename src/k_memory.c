@@ -173,12 +173,13 @@ int setup_heap(void)
 	blk = (queue_node*)p_end;
 
 	for (i = 0; i < NUM_BLOCKS; i++) {
+		blk->next = NULL;
 		enqueue(heap_q, blk);
 		blk = (mem_blk)((char *)blk + MEM_BLK_SIZE + sizeof(queue_node));
 		if ((U32*)heap_q->last + MEM_BLK_SIZE >= gp_stack) break;
 	}
 
-	#ifdef DEBUG_1
+	#ifdef DEBUG_0
 	printf("We have %d memory blocks\n\r", i);
 	printf("heap_q->first = 0x%x \n\r", heap_q->first);
 	printf("heap_q->last = 0x%x \n\r", heap_q->last);

@@ -61,7 +61,7 @@
 
 //Memory management
 #define MEM_BLK_SIZE 128
-#define NUM_BLOCKS 30
+#define NUM_BLOCKS 20
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */

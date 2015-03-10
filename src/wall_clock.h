@@ -4,7 +4,7 @@
 #include "rtx.h"
 #include <LPC17xx.h>
 
-#define SECOND 10
+#define SECOND 1000
 
 void wall_clock_proc(void);
 int to_int (uint8_t);
