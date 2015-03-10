@@ -82,7 +82,7 @@ void set_test_procs() {
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_test_procs[i].m_pid=(U32)(i+1);
 		g_test_procs[i].m_priority=MEDIUM;
-		g_test_procs[i].m_stack_size=0x100;
+		g_test_procs[i].m_stack_size=0x200;
 	}
 
 	g_test_procs[0].mpf_start_pc = &proc1;
@@ -101,27 +101,26 @@ void set_test_procs() {
  */
 void proc1(void)
 {
-
 	int i = 0;
-  int sender_id = -1;
+    int sender_id = -1;
 	MSG_BUF *msg = NULL;
 	MSG_BUF *receive_msg = NULL;
 	msg = (MSG_BUF *)request_memory_block();
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
-	msg->mtext[1] = 'W';
-	delayed_send(PID_KCD, msg, 200);
-
-	// msg = (MSG_BUF *)request_memory_block();
-	// msg->mtype = CRT_REG;
-	// msg->mtext[0] = 'h';
-	// msg->mtext[1] = 'i';
-	// msg->mtext[2] = 'i';
-	// msg->mtext[3] = ':';
-	// msg->mtext[4] = ')';
-	// msg->mtext[5] = '\n';
-	// msg->mtext[6] = '\0';
-	// delayed_send(2, msg, 500);
+	msg->mtext[1] = 'R';
+	delayed_send(PID_KCD, msg, 50);
+	
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = DEFAULT;
+	msg->mtext[0] = '1';
+	msg->mtext[1] = '2';
+	msg->mtext[2] = 'i';
+	msg->mtext[3] = ':';
+	msg->mtext[4] = ')';
+	msg->mtext[5] = '\n';
+	msg->mtext[6] = '\0';
+	delayed_send(2, msg, 5000);
 
 	while (TRUE) {
 		receive_msg = (MSG_BUF *)receive_message(&sender_id);
@@ -160,17 +159,6 @@ void proc2(void)
 	int sender_id = -1;
 
 	printf("proc2 running\n");
-
-	// msg = (MSG_BUF *)request_memory_block();
-	// msg->mtype = CRT_REG;
-	// msg->mtext[0] = 'h';
-	// msg->mtext[1] = 'i';
-	// msg->mtext[2] = 'i';
-	// msg->mtext[3] = ':';
-	// msg->mtext[4] = ')';
-	// msg->mtext[5] = '\n';
-	// msg->mtext[6] = '\0';
-	// delayed_send(1, msg, 2);
 
 	while (TRUE) {		
 

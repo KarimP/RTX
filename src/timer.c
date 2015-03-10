@@ -17,10 +17,6 @@
 
 #define BIT(X) (1<<X)
 
-volatile uint32_t g_timer_count = 0; // increment every 1 ms
-volatile uint32_t g_clock_count = 0; // increment every 1 ms
-int error;
-
 extern int receiving_proc_unblock;
 extern PCB **gp_pcbs;
 extern PROC_INIT g_proc_table[NUM_PROCS];
@@ -95,9 +91,6 @@ uint32_t timer_init(uint8_t n_timer)
 	*/
 	pTimer->MCR = BIT(0) | BIT(1);
 
-	g_timer_count = 0;
-	g_clock_count = 0;
-
 	/* Step 4.4: CSMSIS enable timer0 IRQ */
 	NVIC_EnableIRQ(TIMER0_IRQn);
 
@@ -131,16 +124,11 @@ void c_TIMER0_IRQHandler(void)
 
 	atomic(ON);
 
-	g_timer_count++;
-	// g_clock_count++;
-
 	LPC_TIM0->IR = BIT(0);   // ack inttrupt, see section  21.6.1 on pg 493 of LPC17XX_UM
-
-	// gp_current_process->mp_sp = (U32 *) __get_MSP();
-	gp_current_process = gp_pcbs[PID_TIMER_IPROC];
+	gp_current_process = gp_pcbs[INDEX_TIMER_IPROC];
 
 	receiving_proc_unblock = FALSE;
-	uart_timer_proc();
+	timer_irq_proc();
 
 	gp_current_process = current_process;
 
@@ -149,48 +137,4 @@ void c_TIMER0_IRQHandler(void)
 	if (receiving_proc_unblock) {
 		k_release_processor();
 	}
-}
-
-int get_current_time (void) {
-	return g_timer_count;
-}
-
-int get_wall_time (void) {
-	return g_clock_count % (86400 *1000);
-}
-
-void reset_timer (void) {
-	error = 1000/DELAY_MS;
-	g_clock_count = 0;
-}
-
-void set_timer (int h, int m, int s) {
-	error = 1000/DELAY_MS;
-	g_clock_count = (s + (m + h * 60) * 60) * 1000;
-}
-
-void format_time(char* str){
-		int s,h,m;
-		int curr_time = get_wall_time();
-
-		if (curr_time % 1000 != 0) {
-			curr_time+=1000;
-		}
-		curr_time = curr_time/1000;
-
-		s = curr_time % 60 ;
-		h = curr_time/3600;
-		m = (curr_time/60) % 60 ;
-
-		str[0] = h/10 + '0';
-		str[1] = h % 10 + '0';
-		str[2] = ':';
-		str[3] = m/10 + '0';
-		str[4] = m % 10 + '0';
-		str[5] = ':';
-		str[6] = s/10 + '0';
-		str[7] = s % 10 + '0';
-		str[8] = '\n';
-		str[9] = '\r';
-		str[10] = '\0';
 }

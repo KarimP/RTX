@@ -147,13 +147,15 @@ int get_highest_queue_priority(process_queue **queue) {
 int k_set_process_priority(int process_id, int priority)
 {
 	int i;
-
 	int prev_priority = -1;
 	PCB *proc;
 	int current_process_priority;
 	process_queue **queue = ready_queue;
 
+	atomic(ON);
+
 	if (process_id == 0 || priority > LOWEST_PRIORITY || priority < HIGHEST_PRIORITY) {
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
@@ -170,9 +172,10 @@ int k_set_process_priority(int process_id, int priority)
 
 	//didn't find process in process table
 	if (prev_priority == -1) {
+		atomic(OFF);
 		return RTX_ERR;
 	} else if (prev_priority == priority) { //do nothing
-
+		atomic(OFF);
 		return RTX_OK;
 	}
 
@@ -183,9 +186,11 @@ int k_set_process_priority(int process_id, int priority)
 	}
 
 	if (current_process_priority > get_highest_queue_priority(ready_queue)) {
+		atomic(OFF);
 		k_release_processor();
 	}
 
+	atomic(OFF);
 	return RTX_OK;
 
 }

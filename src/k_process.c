@@ -17,6 +17,7 @@
 #include <system_LPC17xx.h>
 #include "uart_polling.h"
 #include "k_process.h"
+#include "uart.h"
 
 #ifdef DEBUG_0
 #include "printf.h"
@@ -82,7 +83,7 @@ void process_init()
 			*(--sp) = 0x0;
 		}
 		(gp_pcbs[i])->mp_sp = sp;
-		if(i < NUM_PROCS - NUM_I_PROCS) {
+		if (i < NUM_PROCS - NUM_I_PROCS) {
 			enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
 		}
 	}
@@ -135,6 +136,8 @@ int process_switch(PCB *p_pcb_old)
 	PROC_STATE_E state;
 	int priority;
 
+	atomic(ON);
+
 	state = gp_current_process->m_state;
 
 	if (state == NEW) {
@@ -147,6 +150,8 @@ int process_switch(PCB *p_pcb_old)
 		}
 		gp_current_process->m_state = RUN;
 		__set_MSP((U32) gp_current_process->mp_sp);
+
+		atomic(OFF);
 		__rte();  // pop exception stack frame from the stack for a new processes
 	}
 
@@ -169,9 +174,12 @@ int process_switch(PCB *p_pcb_old)
 
 			gp_current_process = p_pcb_old; // revert back to the old proc on error
 
+			atomic(OFF);
 			return RTX_ERR;
 		}
 	}
+
+	atomic(OFF);
 	return RTX_OK;
 }
 
@@ -184,12 +192,14 @@ int k_release_processor(void)
 {
 	PCB *p_pcb_old = NULL;
 
+	atomic(ON);
 	p_pcb_old = gp_current_process;
 
 	gp_current_process = scheduler();
 
 	if ( gp_current_process == NULL  ) {
 		gp_current_process = p_pcb_old; // revert back to the old process
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
@@ -197,6 +207,7 @@ int k_release_processor(void)
 		p_pcb_old = gp_current_process;
 	}
 
+	atomic(OFF);
 	process_switch(p_pcb_old);
 	return RTX_OK;
 }
@@ -288,7 +299,7 @@ int k_send_message(int receiving_pid, void *message_envelope)
 		atomic(ON);
 	}
 
-	atomic(OFF);
+	atomic(OFF);	
 	return RTX_OK;
 }
 
@@ -329,15 +340,17 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 {
 	msg_Node *msg = NULL, *prev_msg = NULL, *new_msg = NULL;
 
+	atomic(ON);
+
 	if (message_envelope == NULL || delay < 0) {
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
 	if (delay == 0) {
+		atomic(OFF);
 		return k_send_message(receiving_pid, message_envelope);
 	}
-
-	atomic(ON);
 
 	new_msg = k_non_blocking_request_memory_block();
 	new_msg->next = NULL;
@@ -355,6 +368,7 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 				prev_msg->next = new_msg;
 			}
 			new_msg->next = msg;
+			break;
 		} else if (msg == (msg_Node *)delayed_queue->last) {
 			msg->next = new_msg;
 			delayed_queue->last = (queue_node *)msg->next;
@@ -419,8 +433,8 @@ void print_ready_procs(void)
 {
 	int i;
 	uart1_put_string("ready queue\n\r");
-	for(i = 0; i < NUM_PROCS; i++) {
-		if ((gp_pcbs[i])->m_state == RDY){
+	for(i = 1; i < NUM_PROCS+1; i++) {
+		if ((gp_pcbs[i])->m_state == RDY || (gp_pcbs[i])->m_state == RUN){
 			uart1_put_string("process ");
 			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
 			uart1_put_string(" priority ");
@@ -434,7 +448,7 @@ void print_mem_blocked_procs(void)
 {
 	int i;
 	uart1_put_string("blocked on memory queue\n\r");
-	for(i = 0; i < NUM_PROCS; i++) {
+	for(i = 1; i < NUM_PROCS+1; i++) {
 		if ((gp_pcbs[i])->m_state == BLOCKED_ON_RESOURCE){
 			uart1_put_string("process ");
 			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
@@ -449,7 +463,7 @@ void print_receive_blocked_procs(void)
 {
 	int i;
 	uart1_put_string("blocked on receive queue\n\r");
-	for(i = 0; i < NUM_PROCS; i++) {
+	for(i = 1; i < NUM_PROCS+1; i++) {
 		if ((gp_pcbs[i])->m_state == BLOCKED_ON_RECEIVE){
 			uart1_put_string("process ");
 			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9

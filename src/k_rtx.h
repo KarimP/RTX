@@ -20,9 +20,9 @@
 
 //number of processes
 #define NUM_TEST_PROCS 6
-#define NUM_OS_PROCS 3
+#define NUM_OS_PROCS 4
 #define NUM_I_PROCS 2
-#define NUM_PROCS 11
+#define NUM_PROCS 12
 
 //common status values
 #define NULL 0
@@ -31,7 +31,13 @@
 #define TRUE 1
 #define FALSE 0
 
- /* Process IDs */
+ /* Message Types */
+#define DEFAULT 0
+#define KCD_REG 1
+#define UART_INPUT 2
+#define WALL_CLOCK 3
+
+/* Process IDs */
 #define PID_NULL 0
 #define PID_P1   1
 #define PID_P2   2
@@ -39,25 +45,23 @@
 #define PID_P4   4
 #define PID_P5   5
 #define PID_P6   6
+#define PID_A    7
+#define PID_B    8
+#define PID_C    9
+#define PID_SET_PRIO     10
 #define PID_CLOCK        11
-#define PID_KCD          7
-#define PID_CRT          8
-#define PID_UART_IPROC   9
-#define PID_TIMER_IPROC  10
+#define PID_KCD          12
+#define PID_CRT          13
+#define PID_TIMER_IPROC  14
+#define PID_UART_IPROC   15
+
+/* Process Indices */
+#define INDEX_TIMER_IPROC  10
+#define INDEX_UART_IPROC   11
 
 //Memory management
 #define MEM_BLK_SIZE 128
 #define NUM_BLOCKS 20
-
-/* Message Types */
-#define DEFAULT 0
-#define KCD_REG 1
-#define UART_INPUT 2
-#define CLOCK_REG 3
-#define CRT_DISPLAY 4
-#define CRT_ON 5
-#define CRT_OFF 6
-#define CRT_REG 7
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */

@@ -162,8 +162,7 @@ void memory_init(void)
 int setup_heap(void)
 {
 	mem_blk blk;
-	int counter = 0;
-	int i;
+	int i = 0;
 
   	// allocate memory for heap memory queue
 	heap_q = (queue*)p_end;
@@ -173,14 +172,14 @@ int setup_heap(void)
 	//initialize memory linked list
 	blk = (queue_node*)p_end;
 
-	for (i = 0; i < NUM_BLOCKS; i++){
+	for (i = 0; i < NUM_BLOCKS; i++) {
 		enqueue(heap_q, blk);
 		blk = (mem_blk)((char *)blk + MEM_BLK_SIZE + sizeof(queue_node));
-		counter++;
+		if ((U32*)heap_q->last + MEM_BLK_SIZE >= gp_stack) break;
 	}
 
-	#ifdef DEBUG_1
-	printf("We have %d memory blocks\n\r", counter);
+	#ifdef DEBUG_0
+	printf("We have %d memory blocks\n\r", i);
 	printf("heap_q->first = 0x%x \n\r", heap_q->first);
 	printf("heap_q->last = 0x%x \n\r", heap_q->last);
 	printf("gpstack b= 0x%x \n\r", gp_stack);
@@ -257,13 +256,15 @@ U32 *alloc_stack(U32 size_b)
 void *k_request_memory_block(void)
 {
 	int process_priority;
-	mem_blk blk = dequeue(heap_q);
+	mem_blk blk = NULL;
 
 	#ifdef DEBUG_1
 	printf("k_request_memory_block: entering...\n\r");
 	#endif /* ! DEBUG_1 */
 
 	atomic(ON);
+
+	blk = dequeue(heap_q);
 
 	while (blk == NULL) {
 
@@ -286,6 +287,7 @@ void *k_request_memory_block(void)
 	#ifdef DEBUG_1
 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
 	#endif /* ! DEBUG_1 */
+
 	atomic(OFF);
 	return blk;
 }
@@ -305,7 +307,7 @@ void *k_non_blocking_request_memory_block(void)
 	#ifdef DEBUG_1
 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
 	#endif /* ! DEBUG_1 */
-
+	
 	return blk + 1;
 }
 
@@ -315,20 +317,24 @@ void *k_non_blocking_request_memory_block(void)
  */
 int k_release_memory_block(void *p_mem_blk)
 {
-	mem_blk rel_blk = (mem_blk)p_mem_blk - 1;
+	mem_blk rel_blk = NULL;
 	int i = 0;
 	PCB *pcb = NULL;
-
-	int a = (p_mem_blk == NULL);
-	int b = ((U8 *)rel_blk < p_end);
-	int c = ((U8 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack);
-	int d = ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0);
+	int a,b,c,d;
 
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: releasing block @ 0x%x \n\r", p_mem_blk);
 	#endif /* ! DEBUG_1 */
 
 	atomic(ON);
+
+	rel_blk = (mem_blk)p_mem_blk - 1;
+
+	a = (p_mem_blk == NULL);
+	b = ((U8 *)rel_blk < p_end);
+	c = ((U8 *)rel_blk + (MEM_BLK_SIZE + sizeof(queue_node)) > (U8*)gp_stack);
+	d = ((int)((U8 *)rel_blk - p_end)%(MEM_BLK_SIZE + sizeof(queue_node)) != 0);
+
 	if ( a || b || c || d ) {
 		atomic(OFF);
 		return RTX_ERR;
@@ -358,6 +364,7 @@ int k_release_memory_block(void *p_mem_blk)
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: exiting...\n\rheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\r\n\r", heap_q->first, heap_q->first->next);
 	#endif /* ! DEBUG_1 */
+
 	atomic(OFF);
 	return RTX_OK;
 }
@@ -403,5 +410,6 @@ int k_non_blocking_release_memory_block(void *p_mem_blk)
 	#ifdef DEBUG_1
 	printf("k_release_memory_block: exiting...\n\rheap_q->first is: 0x%x \nheap_q->first->next is: 0x%x \n\r\n\r", heap_q->first, heap_q->first->next);
 	#endif /* ! DEBUG_1 */
+
 	return RTX_OK;
 }

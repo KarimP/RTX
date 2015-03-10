@@ -1,28 +1,23 @@
 #include "crt.h"
 #include "printf.h"
 #include <LPC17xx.h>
+#include "uart.h"
 
 void crt_proc(void)
 {
 	int sender_id = -1;
     MSG_BUF *msg = NULL;
-    int isTurnedOn = FALSE;
+    LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART0;
 
     while (TRUE)
     {
         msg = (MSG_BUF *) receive_message(&sender_id);
 
-		switch(msg->mtype) {
-			case CRT_ON:
-				isTurnedOn = TRUE;
-				break;
-			case CRT_OFF:
-				isTurnedOn = FALSE;
-				break;
-		}
-
-		if ((msg->mtype == CRT_DISPLAY && isTurnedOn) || msg->mtype == CRT_REG) {
+		if (msg->mtype == DEFAULT) {
             send_message(PID_UART_IPROC, msg);
+
+            //trigger uart interrupt so it sees the message
+            pUart->IER ^= IER_THRE; // toggle the IER_THRE bit
 		}
     }
 }

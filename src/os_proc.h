@@ -12,6 +12,7 @@
 #include "kcd.h"
 #include "irq.h"
 #include "crt.h"
+#include "wall_clock.h"
 
 void null_proc(void);
 

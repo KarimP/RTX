@@ -17,7 +17,7 @@ void initialize_queue(queue *q)
 int enqueue(queue *q, queue_node *node)
 {
     //node is already in queue - return error
-    if (node == NULL || node == q->last) {
+    if (node == NULL || node == q->last || node->next != NULL) {
         return RTX_ERR;
     }
 

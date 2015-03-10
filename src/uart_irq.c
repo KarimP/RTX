@@ -154,8 +154,7 @@ int uart_irq_init(int n_uart) {
 void UART_IProcessHandler(char key)
 {
 	PCB *current_process = gp_current_process;
-	// gp_current_process->mp_sp = (U32 *) __get_MSP();
-	gp_current_process = gp_pcbs[PID_UART_IPROC];
+	gp_current_process = gp_pcbs[INDEX_UART_IPROC];
 
 	atomic(ON);
 
@@ -164,24 +163,6 @@ void UART_IProcessHandler(char key)
 	atomic(OFF);
 
 	gp_current_process = current_process;
-
-	// MSG_BUF *msg = NULL;
-
-	// atomic(ON);
-	// is_blocking = FALSE;
-
-	// msg = (MSG_BUF *)k_request_memory_block();
-	// if (msg != NULL) {
-	// 	msg->mtype = UART_INPUT;
-	// 	msg->mtext[0] = key;
-	// 	msg->mtext[1] = '\0';
-	// }
-
-	// k_send_message(PID_UART_IPROC, msg);
-	// iprocess_switch = PID_UART_IPROC;
-
-	// is_blocking = TRUE;
-	// atomic(OFF);
 
 	k_release_processor();
 }
@@ -236,12 +217,14 @@ void c_UART0_IRQHandler(void)
 	} else if (IIR_IntId & IIR_THRE) {
 		/* THRE Interrupt, transmit holding register becomes empty */
 
+		UART_IProcessHandler(NULL);
+
 		#ifdef DEBUG_1
 		uart1_put_string("Finish writing. Turning off IER_THRE\n\r");
 		#endif // DEBUG_1
 
 		pUart->IER ^= IER_THRE; // toggle the IER_THRE bit
-		pUart->THR = '\0';
+		//pUart->THR = '\0';
 
 	} else {  /* not implemented yet */
 		#ifdef DEBUG_1
