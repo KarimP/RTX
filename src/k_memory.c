@@ -179,7 +179,7 @@ int setup_heap(void)
 		if ((U32*)heap_q->last + MEM_BLK_SIZE >= gp_stack) break;
 	}
 
-	#ifdef DEBUG_0
+	#ifdef DEBUG_1
 	printf("We have %d memory blocks\n\r", i);
 	printf("heap_q->first = 0x%x \n\r", heap_q->first);
 	printf("heap_q->last = 0x%x \n\r", heap_q->last);
@@ -213,46 +213,12 @@ U32 *alloc_stack(U32 size_b)
 		--gp_stack;
 	}
 
-	// #ifdef DEBUG_1
-	//printf("gpstack = 0x%x \n\r", gp_stack);
-	// #endif /* ! DEBUG_1 */
+	#ifdef DEBUG_1
+	printf("gpstack = 0x%x \n\r", gp_stack);
+	#endif /* ! DEBUG_1 */
 
 	return sp;
 }
-
-
-/**
- * @brief attempts to allocate a memory block for the process and blocks the process if that is not possible
- * @return returns a memory block when it is possible to do so
- */
-// void *k_request_memory_block(void)
-// {
-// 	int process_priority;
-// 	mem_blk blk = dequeue(heap_q);
-
-// 	#ifdef DEBUG_1
-// 	printf("k_request_memory_block: entering...\n\r");
-// 	#endif /* ! DEBUG_1 */
-
-// 	while (blk == NULL ) {
-
-// 		process_priority = k_get_process_priority(gp_current_process->m_pid);
-// 		pop_queue(ready_queue, gp_current_process->m_pid, process_priority);
-
-// 		enqueue_priority_queue(blocked_queue, gp_current_process, process_priority);
-
-// 		//set process state to BLOCKED_ON_RESOURCE ;
-// 		gp_current_process->m_state = BLOCKED_ON_RESOURCE;
-
-// 		k_release_processor();
-// 	}
-
-// 	#ifdef DEBUG_1
-// 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
-// 	#endif /* ! DEBUG_1 */
-
-// 	return blk + 1;
-// }
 
 void *k_request_memory_block(void)
 {
@@ -279,6 +245,8 @@ void *k_request_memory_block(void)
 		atomic(OFF);
 		k_release_processor();
 		atomic(ON);
+
+		blk = dequeue(heap_q);
 	}
 
 	if (blk != NULL) {
@@ -353,13 +321,16 @@ int k_release_memory_block(void *p_mem_blk)
 				pop_queue(blocked_queue, pcb->m_pid, i);
 				enqueue_priority_queue(ready_queue, pcb, i);
 				pcb->m_state = RDY;
-				if (i > k_get_process_priority(gp_current_process->m_pid)) {
+				if (i < k_get_process_priority(gp_current_process->m_pid)) {
 					atomic(OFF);
 					k_release_processor();
 					atomic(ON);
 				}
+				i = NUM_PRIORITIES;
+				break;
 			}
 		}
+		
 	}
 
 	#ifdef DEBUG_1
@@ -404,6 +375,8 @@ int k_non_blocking_release_memory_block(void *p_mem_blk)
 				pop_queue(blocked_queue, pcb->m_pid, i);
 				enqueue_priority_queue(ready_queue, pcb, i);
 				pcb->m_state = RDY;
+				i = NUM_PRIORITIES;
+				break;
 			}
 		}
 	}

@@ -39,6 +39,10 @@ extern PROC_INIT g_test_procs[NUM_TEST_PROCS];
 extern process_queue **ready_queue;
 extern process_queue **blocked_queue;
 
+extern mem_q heap_q;
+
+int is_atomic = OFF;
+
 int receiving_proc_unblock = TRUE;
 
 /**
@@ -83,14 +87,18 @@ void process_init()
 			*(--sp) = 0x0;
 		}
 		(gp_pcbs[i])->mp_sp = sp;
+		
 		if (i < NUM_PROCS - NUM_I_PROCS) {
 			enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
+		} else {
+			gp_pcbs[i]->m_state = WAITING_FOR_INTERRUPT;
 		}
 	}
 }
 
 void atomic (int toggle)
 {
+	is_atomic = toggle;
 	if (toggle) {
 		__disable_irq();
 	}
@@ -272,12 +280,14 @@ int k_send_message(int receiving_pid, void *message_envelope)
 	atomic(ON);
 
 	if (message_envelope == NULL) {
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
 	msg = k_non_blocking_request_memory_block();
 
 	if (msg == NULL) {
+		atomic(OFF);
 		return RTX_ERR;
 	}
 
@@ -353,6 +363,11 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 	}
 
 	new_msg = k_non_blocking_request_memory_block();
+	if (new_msg == NULL) {
+		atomic(OFF);
+		return RTX_ERR;
+	}
+	
 	new_msg->next = NULL;
 	new_msg->d_pid = receiving_pid;
 	new_msg->s_pid = gp_current_process->m_pid;
@@ -432,14 +447,10 @@ void *k_non_blocking_receive_message(int *sender_id)
 void print_ready_procs(void)
 {
 	int i;
-	uart1_put_string("ready queue\n\r");
-	for(i = 1; i < NUM_PROCS+1; i++) {
-		if ((gp_pcbs[i])->m_state == RDY || (gp_pcbs[i])->m_state == RUN){
-			uart1_put_string("process ");
-			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
-			uart1_put_string(" priority ");
-			uart1_put_char('0' + (int)k_get_process_priority((gp_pcbs[i])->m_pid));
-			uart1_put_string("\n\r");
+	printf("Processes in Ready Queue:\n\r");
+	for(i = 1; i <= NUM_PROCS - NUM_I_PROCS; i++) {
+		if ((gp_pcbs[i])->m_state == RDY || (gp_pcbs[i])->m_state == RUN) {
+			printf("Process %d: priority %d\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
 		}
 	}
 }
@@ -447,14 +458,10 @@ void print_ready_procs(void)
 void print_mem_blocked_procs(void)
 {
 	int i;
-	uart1_put_string("blocked on memory queue\n\r");
-	for(i = 1; i < NUM_PROCS+1; i++) {
+	printf("Processes Blocked on Resource:\n\r");
+	for(i = 1; i <= NUM_PROCS - NUM_I_PROCS; i++) {
 		if ((gp_pcbs[i])->m_state == BLOCKED_ON_RESOURCE){
-			uart1_put_string("process ");
-			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
-			uart1_put_string(" priority ");
-			uart1_put_char('0' + (int)k_get_process_priority((gp_pcbs[i])->m_pid));
-			uart1_put_string("\n\r");
+			printf("Process %d: priority %d\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
 		}
 	}
 }
@@ -462,14 +469,38 @@ void print_mem_blocked_procs(void)
 void print_receive_blocked_procs(void)
 {
 	int i;
-	uart1_put_string("blocked on receive queue\n\r");
-	for(i = 1; i < NUM_PROCS+1; i++) {
+	printf("Processes Blocked on Receive:\n\r");
+	for(i = 1; i <= NUM_PROCS - NUM_I_PROCS; i++) {
 		if ((gp_pcbs[i])->m_state == BLOCKED_ON_RECEIVE){
-			uart1_put_string("process ");
-			uart1_put_char('0' + (int)(gp_pcbs[i])->m_pid); // need to handle pid > 9
-			uart1_put_string(" priority ");
-			uart1_put_char('0' + (int)k_get_process_priority((gp_pcbs[i])->m_pid));
-			uart1_put_string("\n\r");
+			printf("Process %d: priority %d\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+		}
+	}
+}
+
+void print_number_of_memory_blocks(void)
+{
+	printf("Number of Memory Blocks Available:");
+	printf(" %d\n\r", (int)size(heap_q));
+}
+
+void print_list_of_processes(void)
+{
+	int i;
+	for(i = 1; i <= NUM_PROCS; i++) {
+		if ((gp_pcbs[i])->m_state == RUN){
+			printf("Process %d: priority %d - state is currently running.\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+		}
+		else if ((gp_pcbs[i])->m_state == RDY ){
+			printf("Process %d: priority %d - state is ready.\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+		}
+		else if ((gp_pcbs[i])->m_state == BLOCKED_ON_RESOURCE){
+			printf("Process %d: priority %d - state is blocked on resource.\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+		}
+		else if ((gp_pcbs[i])->m_state == BLOCKED_ON_RECEIVE) {
+			printf("Process %d: priority %d - state is blocked on receive.\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
+		}
+		else if ((gp_pcbs[i])->m_state == WAITING_FOR_INTERRUPT) {
+			printf("Process %d: priority %d - state is waiting for interrupt.\n\r", (int)(gp_pcbs[i])->m_pid, (int)k_get_process_priority((gp_pcbs[i])->m_pid));
 		}
 	}
 }

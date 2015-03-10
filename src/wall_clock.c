@@ -15,6 +15,7 @@ void wall_clock_proc(void)
 	int sender_id = -1;
 	int clock_count = 0;
 	int clock_is_on = TRUE;
+	int increment = RTX_OK;
 
 	msg = (MSG_BUF *) request_memory_block();
 	msg->mtype = KCD_REG;
@@ -25,7 +26,9 @@ void wall_clock_proc(void)
 	
 	msg = (MSG_BUF *) request_memory_block();
 	msg->mtype = WALL_CLOCK;
-	delayed_send(PID_CLOCK, msg, SECOND);
+	increment = delayed_send(PID_CLOCK, msg, SECOND);
+
+	if (increment == RTX_ERR) release_memory_block(msg);
 
 	while (TRUE) {
 		msg = (MSG_BUF *) receive_message(&sender_id);
@@ -33,13 +36,19 @@ void wall_clock_proc(void)
 		if (msg->mtype == WALL_CLOCK) {
 
 			if (clock_is_on) display_time(++clock_count);
-			delayed_send(PID_CLOCK, msg, SECOND);
-
+			increment = delayed_send(PID_CLOCK, msg, SECOND);
 		} else if (msg->mtext[0] == '%' && msg->mtext[1] == 'W') {
 
 			switch (msg->mtext[2]) {
 				case 'R':
 					clock_count = 0;
+					if (increment == RTX_ERR) {
+						msg->mtype = WALL_CLOCK;
+						increment = delayed_send(PID_CLOCK, msg, SECOND);
+					} else {
+						release_memory_block(msg);
+					}
+
 					clock_is_on = TRUE;
 					display_time(clock_count);
 				break;
@@ -56,6 +65,12 @@ void wall_clock_proc(void)
 					
 						if (hr <= 23 && min <= 60 && sec <= 60 && hr >= 0 && min >= 0 && sec >= 0) {
 							clock_count = (sec + (min + hr * 60) * 60);
+							if (increment == RTX_ERR) {
+								msg->mtype = WALL_CLOCK;
+								increment = delayed_send(PID_CLOCK, msg, SECOND);
+							} else {
+								release_memory_block(msg);
+							}
 							clock_is_on = TRUE;
 							display_time(clock_count);
 						}	
@@ -64,10 +79,13 @@ void wall_clock_proc(void)
 
 				case 'T':
 					clock_count = 0;
-					clock_is_on = FALSE;					
+					clock_is_on = FALSE;
+					release_memory_block(msg);
 				break;
 			}
+		}
 
+		if (increment == RTX_ERR) {
 			release_memory_block(msg);
 		}
 	}

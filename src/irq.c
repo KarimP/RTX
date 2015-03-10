@@ -40,12 +40,23 @@ void uart_irq_proc(char key)
 			print_ready_procs();
 			forward_to_kcd = FALSE;
 			break;
+		// case '"':
 		case '@':
 			print_mem_blocked_procs();
 			forward_to_kcd = FALSE;
 			break;
+		// case '/':
 		case '#':
 			print_receive_blocked_procs();
+			forward_to_kcd = FALSE;
+			break;
+		case '$':
+			print_number_of_memory_blocks();
+			forward_to_kcd = FALSE;
+			break;
+		// case '?':
+		case '^':
+			print_list_of_processes();
 			forward_to_kcd = FALSE;
 			break;
 	}

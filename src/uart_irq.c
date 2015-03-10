@@ -154,16 +154,21 @@ int uart_irq_init(int n_uart) {
 void UART_IProcessHandler(char key)
 {
 	PCB *current_process = gp_current_process;
-	gp_current_process = gp_pcbs[INDEX_UART_IPROC];
 
 	atomic(ON);
+	//set current process to i-process
+	gp_current_process->m_state = RDY;
+	gp_current_process = gp_pcbs[INDEX_UART_IPROC];
+	gp_current_process->m_state = RUN;
 
 	uart_irq_proc(key);
+	
+	//restore current process
+	gp_current_process->m_state = WAITING_FOR_INTERRUPT;
+	gp_current_process = current_process;
+	gp_current_process->m_state = RUN;
 
 	atomic(OFF);
-
-	gp_current_process = current_process;
-
 	k_release_processor();
 }
 

@@ -75,7 +75,7 @@ typedef unsigned int U32;
 
 /* process states, note we no longer only assume three states in this example, since block_on_receive added */
 typedef enum {
-    NEW = 0, RDY, RUN, BLOCKED_ON_RESOURCE, BLOCKED_ON_RECEIVE
+    NEW = 0, RDY, RUN, BLOCKED_ON_RESOURCE, BLOCKED_ON_RECEIVE, WAITING_FOR_INTERRUPT
 } PROC_STATE_E;
 
 /*

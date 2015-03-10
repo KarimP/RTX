@@ -125,12 +125,19 @@ void c_TIMER0_IRQHandler(void)
 	atomic(ON);
 
 	LPC_TIM0->IR = BIT(0);   // ack inttrupt, see section  21.6.1 on pg 493 of LPC17XX_UM
+
+	//set current process to i-process
+	gp_current_process->m_state = RDY;
 	gp_current_process = gp_pcbs[INDEX_TIMER_IPROC];
+	gp_current_process->m_state = RUN;
 
 	receiving_proc_unblock = FALSE;
 	timer_irq_proc();
 
+	//restore current process
+	gp_current_process->m_state = WAITING_FOR_INTERRUPT;
 	gp_current_process = current_process;
+	gp_current_process->m_state = RUN;
 
 	atomic(OFF);
 

@@ -20,7 +20,9 @@
 #define TRUE 1
 #define FALSE 0
 
+//Memory management
 #define MEM_BLK_SIZE 128
+#define NUM_BLOCKS 20
 
  /* Message Types */
 #define DEFAULT 0

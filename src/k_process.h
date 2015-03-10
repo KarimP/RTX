@@ -45,5 +45,7 @@ extern void set_os_procs(void);
 void print_ready_procs(void);
 void print_mem_blocked_procs(void);
 void print_receive_blocked_procs(void);
+void print_number_of_memory_blocks(void);
+void print_list_of_processes(void);
 
 #endif /* ! K_PROCESS_H_ */
