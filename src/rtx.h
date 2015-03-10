@@ -68,7 +68,7 @@ typedef struct proc_init
 typedef struct msgbuf
 {
 	int mtype;              /* user defined message type */
-	char mtext[MEM_BLK_SIZE - sizeof(int)];          /* body of the message */
+	char mtext[1]; //[MEM_BLK_SIZE - sizeof(int)];          /* body of the message */
 } MSG_BUF;
 
 /* ----- RTX User API ----- */

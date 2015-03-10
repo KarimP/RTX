@@ -108,7 +108,7 @@ void proc1(void)
 	msg = (MSG_BUF *)request_memory_block();
 	msg->mtype = KCD_REG;
 	msg->mtext[0] = '%';
-	msg->mtext[1] = 'W';
+	msg->mtext[1] = 'R';
 	delayed_send(PID_KCD, msg, 50);
 	
 	msg = (MSG_BUF *)request_memory_block();
@@ -378,3 +378,13 @@ void proc6(void)
 		release_processor();
 	}
 }
+
+// test KCD
+// proc = block on resource
+// proc = block on received
+// test CRT
+// test delayed_send
+// test send, receive 
+
+
+// hot keys, timer, kcd input = all on demo???????
