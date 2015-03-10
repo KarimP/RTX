@@ -16,7 +16,7 @@ void k_rtx_init(void)
     atomic(ON);
 
     uart0_irq_init(); //irq, for console input
-    uart0_init(); //polling, for DEBUGGING
+    uart1_init(); //polling, for DEBUGGING
 
     timer_init(0);
     memory_init();
