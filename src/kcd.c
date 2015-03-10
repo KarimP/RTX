@@ -1,5 +1,9 @@
 #include "kcd.h"
 
+//decodes keyboard inputs passed in by uart into commands
+//registers commands sent with KCD_REG message type
+//forwards commands to processes registered with the inputted command
+//forwards all uart input to CRT
 void kcd_proc()
 {
     MSG_BUF *msg = NULL;
@@ -31,19 +35,23 @@ void kcd_proc()
 
                     if (found_command) buf[buf_size++] = msg->mtext[0];
 
+                    //end of command
                     if (found_command && (msg->mtext[0] == '\n' || msg->mtext[0] == '\r' || msg->mtext[0] == '%') && buf_size > 1) {
                         buf[--buf_size] = '\0';
 
+                        //look up command in registered commands
                         for (i = 0; i < num_commands; ++i) {
                             cmd_buf = buf;
                             cur_cmd_buf = commands[i]->mtext;
-
+                        
+                            //check if registered command is within current command 
                             while (*cmd_buf != '\0' && *cur_cmd_buf != '\0') {
                                 if (*cmd_buf != *cur_cmd_buf) break;
                                 cmd_buf++;
                                 cur_cmd_buf++;
                             }
 
+                            // found a matching registered command
                             if (*cur_cmd_buf == '\0') {
 
                                 command_msg = (MSG_BUF *)request_memory_block();
@@ -66,6 +74,7 @@ void kcd_proc()
                     if (buf_size > MEM_BLK_SIZE) buf_size = 0;
 
                     msg->mtype = DEFAULT;
+                    //forward char input to CRT
                     send_message(PID_CRT, msg);
                     
                     break;
@@ -73,7 +82,8 @@ void kcd_proc()
                 case KCD_REG:
                     if (num_commands < MEM_BLK_SIZE && msg->mtext[0] == '%') {
                         command_exists = FALSE;
-                         
+                        
+                         // determine if command was already registered
                         for (i = 0; i < num_commands; ++i) {
                             cmd_buf = msg->mtext;
                             cur_cmd_buf = commands[i]->mtext;

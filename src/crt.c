@@ -3,6 +3,8 @@
 #include <LPC17xx.h>
 #include "uart.h"
 
+//forwards message to UART to print
+//toggles the IER_THRE bit to trigger the UART interrupt
 void crt_proc(void)
 {
 	int sender_id = -1;

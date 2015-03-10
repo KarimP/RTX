@@ -7,6 +7,9 @@
 extern void atomic(int);
 extern queue *delayed_queue;
 
+//called by timer once per millisecond
+//decrements messages's expire time in delayed queue by one
+//sends messages when they are expired 
 void timer_irq_proc(void)
 {
 	msg_Node *msg = (msg_Node *)delayed_queue->first;
@@ -22,6 +25,10 @@ void timer_irq_proc(void)
     }
 }
 
+//called bu uart_irq when an interrupt is caused
+//forwards input to KCD
+//outputs messages from CRT to display
+//handles debug hotkeys
 void uart_irq_proc(char key)
 {
 	int sender_id = -1;

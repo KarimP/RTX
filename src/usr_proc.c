@@ -82,8 +82,9 @@ void set_test_procs() {
 }
 
 /**
- * @brief: Process 1: a process that prints five uppercase letters
- *         and then yields the cpu.
+ * @brief: tests send, send_delay and receive message (blocking)
+ * is blocked on receive for 10 seconds, receives a delayed message
+ * then remains blocked on receive indefinitely 
  */
 void send_message_test(void)
 {
@@ -133,8 +134,7 @@ void send_message_test(void)
 /**
  * @brief: Process 2: Tests received message
  * This processes receives a message without being blocked, then
- * receives a message after being blocked then
- * is blocked indefinately on receive
+ * is blocked indefinitely on receive
  */
 void receive_message_test(void)
 {
@@ -336,6 +336,8 @@ void preemption_check(void)
 
 /**
  * @brief: Process 6: Allocates all blocks of memory
+ *	blocks on resource state for ~10 seconds
+ * until process 1 unblocks
 */
 void blocked_resource_test(void)
 {

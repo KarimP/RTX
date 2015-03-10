@@ -161,7 +161,7 @@ void UART_IProcessHandler(char key)
 	gp_current_process = gp_pcbs[INDEX_UART_IPROC];
 	gp_current_process->m_state = RUN;
 
-	uart_irq_proc(key);
+	uart_irq_proc(key);		//call uart i-process
 	
 	//restore current process
 	gp_current_process->m_state = WAITING_FOR_INTERRUPT;
@@ -237,62 +237,3 @@ void c_UART0_IRQHandler(void)
 		#endif // DEBUG_1
 	}
 }
-
-/**
- * @brief: c UART0 IRQ Handler - ORIGINAL HANDLER
- */
-// void c_UART0_IRQHandler(void)
-// {
-// 	uint8_t IIR_IntId;	    // Interrupt ID from IIR
-// 	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART0;
-
-// #ifdef DEBUG_0
-// 	uart1_put_string("Entering c_UART0_IRQHandler\n\r");
-// #endif // DEBUG_0
-
-// 	/* Reading IIR automatically acknowledges the interrupt */
-// 	IIR_IntId = (pUart->IIR) >> 1 ; // skip pending bit in IIR
-// 	if (IIR_IntId & IIR_RDA) { // Receive Data Avaialbe
-// 		/* read UART. Read RBR will clear the interrupt */
-// 		g_char_in = pUart->RBR;
-
-// #ifdef DEBUG_0
-// 		uart1_put_string("Reading a char = ");
-// 		uart1_put_char(g_char_in);
-// 		uart1_put_string("\n\r");
-// #endif // DEBUG_0
-
-// 		g_buffer[12] = g_char_in; // nasty hack
-// 		g_send_char = 1;
-// 	} else if (IIR_IntId & IIR_THRE) {
-// 	 THRE Interrupt, transmit holding register becomes empty
-
-// 		if (*gp_buffer != '\0' ) {
-// 			g_char_out = *gp_buffer;
-// #ifdef DEBUG_0
-// 			//uart1_put_string("Writing a char = ");
-// 			//uart1_put_char(g_char_out);
-// 			//uart1_put_string("\n\r");
-
-// 			// you could use the printf instead
-// 			printf("Writing a char = %c \n\r", g_char_out);
-// #endif // DEBUG_0
-// 			pUart->THR = g_char_out;
-// 			gp_buffer++;
-// 		} else {
-// #ifdef DEBUG_0
-// 			uart1_put_string("Finish writing. Turning off IER_THRE\n\r");
-// #endif // DEBUG_0
-// 			pUart->IER ^= IER_THRE; // toggle the IER_THRE bit
-// 			pUart->THR = '\0';
-// 			g_send_char = 0;
-// 			gp_buffer = g_buffer;
-// 		}
-
-// 	} else {  /* not implemented yet */
-// #ifdef DEBUG_0
-// 			uart1_put_string("Should not get here!\n\r");
-// #endif // DEBUG_0
-// 		return;
-// 	}
-// }

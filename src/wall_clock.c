@@ -8,6 +8,12 @@
 #define CLOCK_REG 3
 #define BUFF_SIZE 100
 
+//prints out the time through the CRT every second
+//registers with KCD for command %W
+//%WR - reset clock to 00:00:00
+//%WS - set clock to xx:xx:xx
+//%WT - terminates
+//sends delayed messages to itself every 1 second to update
 void wall_clock_proc(void)
 {
 	MSG_BUF *msg;
@@ -40,9 +46,9 @@ void wall_clock_proc(void)
 		} else if (msg->mtext[0] == '%' && msg->mtext[1] == 'W') {
 
 			switch (msg->mtext[2]) {
-				case 'R':
+				case 'R': //Reset
 					clock_count = 0;
-					if (increment == RTX_ERR) {
+					if (increment == RTX_ERR) { //send if prev delayed send failed
 						msg->mtype = WALL_CLOCK;
 						increment = delayed_send(PID_CLOCK, msg, SECOND);
 					} else {
@@ -53,19 +59,19 @@ void wall_clock_proc(void)
 					display_time(clock_count);
 				break;
 
-				case 'S':
+				case 'S': //Set
 					// %WS hh:mm:ss
 					if ((msg->mtext[3] == ' ') && (msg->mtext[6] == ':') && (msg->mtext[9] == ':')) {
-						hr = to_int(msg->mtext[4]) * 10; //first hour digit
-						hr += to_int(msg->mtext[5]); //second hour digit
-						min = to_int(msg->mtext[7]) * 10; //first minute digit
-						min += to_int(msg->mtext[8]); //second minute digit
-						sec = to_int(msg->mtext[10]) * 10; //first second digit
-						sec += to_int(msg->mtext[11]); //second second digit
+						hr = to_int(msg->mtext[4]) * 10; 	//first hour digit
+						hr += to_int(msg->mtext[5]); 		//second hour digit
+						min = to_int(msg->mtext[7]) * 10; 	//first minute digit
+						min += to_int(msg->mtext[8]); 		//second minute digit
+						sec = to_int(msg->mtext[10]) * 10; 	//first second digit
+						sec += to_int(msg->mtext[11]); 		//second second digit
 					
 						if (hr <= 23 && min <= 60 && sec <= 60 && hr >= 0 && min >= 0 && sec >= 0) {
 							clock_count = (sec + (min + hr * 60) * 60);
-							if (increment == RTX_ERR) {
+							if (increment == RTX_ERR) {  //send if prev delayed send failed
 								msg->mtype = WALL_CLOCK;
 								increment = delayed_send(PID_CLOCK, msg, SECOND);
 							} else {
@@ -77,7 +83,7 @@ void wall_clock_proc(void)
 					}
 				break;
 
-				case 'T':
+				case 'T': //Terminate
 					clock_count = 0;
 					clock_is_on = FALSE;
 					release_memory_block(msg);
@@ -91,6 +97,7 @@ void wall_clock_proc(void)
 	}
 }
 
+
 int to_int (uint8_t num) {
     if (num <= '9' && num >= '0') {
         return num -'0';
@@ -98,6 +105,8 @@ int to_int (uint8_t num) {
     return RTX_ERR;
 }
 
+//converts output to readable display
+//sends to CRT
 void display_time(int curr_time) {
 	int s,h,m;
 	MSG_BUF *display_msg = (MSG_BUF *)request_memory_block();

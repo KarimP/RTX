@@ -15,6 +15,7 @@
 /* initialization table item */
 extern PROC_INIT g_proc_table[NUM_PROCS];
 
+// sets up the system processes
 void set_os_procs(void) {
     g_proc_table[0].m_pid = (U32)(0);
     g_proc_table[0].m_priority = 4;

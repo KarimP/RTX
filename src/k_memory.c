@@ -220,6 +220,11 @@ U32 *alloc_stack(U32 size_b)
 	return sp;
 }
 
+/**
+ * @brief allocates a memory block if it is possible to do so
+ * blocks when there are no memory blocks left
+ * @returns memory block pointer
+ */
 void *k_request_memory_block(void)
 {
 	int process_priority;
@@ -261,6 +266,11 @@ void *k_request_memory_block(void)
 	return blk;
 }
 
+/**
+ * @brief allocates a memory block if it is possible to do so
+ * does not block when there are no memory blocks left
+ * @return NULL or a memory block pointer
+ */
 void *k_non_blocking_request_memory_block(void)
 {
 	mem_blk blk = dequeue(heap_q);
@@ -343,6 +353,7 @@ int k_release_memory_block(void *p_mem_blk)
 
 /**
  * @brief deallocates the passed in memory block if it is possible to do so
+ * does not interrupt if higher priority process is unblocked
  * @return RTX_ERR on error and RTX_OK on success
  */
 int k_non_blocking_release_memory_block(void *p_mem_blk)

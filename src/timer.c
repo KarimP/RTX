@@ -132,7 +132,7 @@ void c_TIMER0_IRQHandler(void)
 	gp_current_process->m_state = RUN;
 
 	receiving_proc_unblock = FALSE;
-	timer_irq_proc();
+	timer_irq_proc();	// call timer i-proc
 
 	//restore current process
 	gp_current_process->m_state = WAITING_FOR_INTERRUPT;

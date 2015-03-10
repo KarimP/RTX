@@ -88,7 +88,7 @@ void process_init()
 		}
 		(gp_pcbs[i])->mp_sp = sp;
 		
-		if (i < NUM_PROCS - NUM_I_PROCS) {
+		if (i < NUM_PROCS - NUM_I_PROCS) { //only enqueue non i-procs
 			enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
 		} else {
 			gp_pcbs[i]->m_state = WAITING_FOR_INTERRUPT;
@@ -96,6 +96,7 @@ void process_init()
 	}
 }
 
+// turns on or off the irq
 void atomic (int toggle)
 {
 	is_atomic = toggle;
@@ -234,6 +235,7 @@ PCB* get_pcb_from_pid(int process_id)
 	return NULL;
 }
 
+
 void block_process(PCB *proc, int pid, PROC_STATE_E blocked_status)
 {
     int proc_priority = k_get_process_priority(pid);
@@ -250,6 +252,7 @@ void ready_process(PCB *proc, int pid)
     enqueue_priority_queue(ready_queue, proc, proc_priority);
 }
 
+// sends a message by passing in a kernel msg envelope
 int k_send_message_with_node(msg_Node *msg) {
 	PCB* receiving_proc = NULL;
 
@@ -273,6 +276,7 @@ int k_send_message_with_node(msg_Node *msg) {
 	return RTX_OK;
 }
 
+// sends a message by passing in a user msg envelope
 int k_send_message(int receiving_pid, void *message_envelope)
 {
 	PCB* receiving_proc = NULL;
@@ -313,6 +317,8 @@ int k_send_message(int receiving_pid, void *message_envelope)
 	return RTX_OK;
 }
 
+// sends a message by passing in a user msg envelope
+// does not interrupt if receiving proc is unblocked
 int k_non_blocking_send_message(int receiving_pid, void *message_envelope)
 {
 	PCB* receiving_proc = NULL;
@@ -346,6 +352,7 @@ int k_non_blocking_send_message(int receiving_pid, void *message_envelope)
 	return RTX_OK;
 }
 
+// sends a message by passing in a user msg envelope after a specified delay (in ms)
 int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 {
 	msg_Node *msg = NULL, *prev_msg = NULL, *new_msg = NULL;
@@ -399,6 +406,9 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 	return RTX_OK;
 }
 
+//receives first message in current process message queue 
+//sets the sender_id
+//blocks current process if no message exists
 void *k_receive_message(int *sender_id)
 {
 	msg_Node* msg = NULL;
@@ -427,6 +437,9 @@ void *k_receive_message(int *sender_id)
 	return msgbuf;
 }
 
+//receives first message in current process message queue 
+//sets the sender_id
+//does not block current process if no message exists
 void *k_non_blocking_receive_message(int *sender_id)
 {
 	msg_Node* msg = NULL;
