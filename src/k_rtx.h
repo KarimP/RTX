@@ -20,9 +20,9 @@
 
 //number of processes
 #define NUM_TEST_PROCS 6
-#define NUM_OS_PROCS 4
+#define NUM_OS_PROCS 5
 #define NUM_I_PROCS 2
-#define NUM_PROCS 12
+#define NUM_PROCS 13
 
 //common status values
 #define NULL 0
@@ -56,12 +56,12 @@
 #define PID_UART_IPROC   15
 
 /* Process Indices */
-#define INDEX_TIMER_IPROC  10
-#define INDEX_UART_IPROC   11
+#define INDEX_TIMER_IPROC  11
+#define INDEX_UART_IPROC   12
 
 //Memory management
 #define MEM_BLK_SIZE 128
-#define NUM_BLOCKS 20
+#define NUM_BLOCKS 30
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */

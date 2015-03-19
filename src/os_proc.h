@@ -13,6 +13,7 @@
 #include "irq.h"
 #include "crt.h"
 #include "wall_clock.h"
+ #include "set_priority.h"
 
 void null_proc(void);
 

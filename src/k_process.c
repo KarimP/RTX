@@ -87,7 +87,7 @@ void process_init()
 			*(--sp) = 0x0;
 		}
 		(gp_pcbs[i])->mp_sp = sp;
-		
+
 		if (i < NUM_PROCS - NUM_I_PROCS) { //only enqueue non i-procs
 			enqueue_priority_queue(ready_queue, gp_pcbs[i], g_proc_table[i].m_priority);
 		} else {
@@ -235,7 +235,7 @@ PCB* get_pcb_from_pid(int process_id)
 	return NULL;
 }
 
-
+//should be used by request_memory_block when doing code cleanup
 void block_process(PCB *proc, int pid, PROC_STATE_E blocked_status)
 {
     int proc_priority = k_get_process_priority(pid);
@@ -244,12 +244,16 @@ void block_process(PCB *proc, int pid, PROC_STATE_E blocked_status)
     enqueue_priority_queue(blocked_queue, proc, proc_priority);
 }
 
-void ready_process(PCB *proc, int pid)
+//should be used by release_memory_block when doing code cleanup
+//returns: TRUE if current process should be preempted, FALSE otherwise
+int ready_process(PCB *proc, int pid)
 {
     int proc_priority = k_get_process_priority(pid);
+	int current_priority = k_get_process_priority(gp_current_process->m_pid);
     proc->m_state = RDY;
     pop_queue(blocked_queue, pid, proc_priority);
     enqueue_priority_queue(ready_queue, proc, proc_priority);
+    return (current_priority < proc_priority);
 }
 
 // sends a message by passing in a kernel msg envelope
@@ -306,14 +310,14 @@ int k_send_message(int receiving_pid, void *message_envelope)
 
 	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
 		//set state to ready, and move from blocked queue to ready queue
-        ready_process(receiving_proc, msg->d_pid);
-
-    	atomic(OFF);
-		k_release_processor();
-		atomic(ON);
+        if (ready_process(receiving_proc, msg->d_pid)) {
+        	atomic(OFF);
+			k_release_processor();
+			atomic(ON);
+        }
 	}
 
-	atomic(OFF);	
+	atomic(OFF);
 	return RTX_OK;
 }
 
@@ -374,7 +378,7 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 		atomic(OFF);
 		return RTX_ERR;
 	}
-	
+
 	new_msg->next = NULL;
 	new_msg->d_pid = receiving_pid;
 	new_msg->s_pid = gp_current_process->m_pid;
@@ -406,7 +410,7 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 	return RTX_OK;
 }
 
-//receives first message in current process message queue 
+//receives first message in current process message queue
 //sets the sender_id
 //blocks current process if no message exists
 void *k_receive_message(int *sender_id)
@@ -437,7 +441,7 @@ void *k_receive_message(int *sender_id)
 	return msgbuf;
 }
 
-//receives first message in current process message queue 
+//receives first message in current process message queue
 //sets the sender_id
 //does not block current process if no message exists
 void *k_non_blocking_receive_message(int *sender_id)

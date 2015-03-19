@@ -11,7 +11,7 @@
 
 //number of processes
 #define NUM_TEST_PROCS 6
-#define NUM_PROCS 12
+#define NUM_PROCS 13
 
 //common status values
 #define NULL 0
@@ -22,7 +22,7 @@
 
 //Memory management
 #define MEM_BLK_SIZE 128
-#define NUM_BLOCKS 20
+#define NUM_BLOCKS 30
 
  /* Message Types */
 #define DEFAULT 0
@@ -70,7 +70,7 @@ typedef struct proc_init
 typedef struct msgbuf
 {
 	int mtype;              /* user defined message type */
-	char mtext[1]; //[MEM_BLK_SIZE - sizeof(int)];          /* body of the message */
+	char mtext[1];          /* body of the message */
 } MSG_BUF;
 
 /* ----- RTX User API ----- */
@@ -116,5 +116,5 @@ extern void *_receive_message(U32 p_func, void *p_pid) __SVC_0;
 /* Timing Service */
 extern int k_delayed_send(int pid, void *p_msg, int delay);
 #define delayed_send(pid, p_msg, delay) _delayed_send((U32)k_delayed_send, pid, p_msg, delay)
-extern int _delayed_send(U32 p_func, int pid, void *p_msg, int delay) __SVC_0;  
+extern int _delayed_send(U32 p_func, int pid, void *p_msg, int delay) __SVC_0;
 #endif /* !RTX_H_ */

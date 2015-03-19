@@ -9,7 +9,7 @@ void kcd_proc()
     MSG_BUF *msg = NULL;
     MSG_BUF *command_msg = NULL;
     char *buf = (char *)request_memory_block();
-    int buf_size = 0;    
+    int buf_size = 0;
 
     int sender_id = -1;
 
@@ -43,8 +43,8 @@ void kcd_proc()
                         for (i = 0; i < num_commands; ++i) {
                             cmd_buf = buf;
                             cur_cmd_buf = commands[i]->mtext;
-                        
-                            //check if registered command is within current command 
+
+                            //check if registered command is within current command
                             while (*cmd_buf != '\0' && *cur_cmd_buf != '\0') {
                                 if (*cmd_buf != *cur_cmd_buf) break;
                                 cmd_buf++;
@@ -76,13 +76,13 @@ void kcd_proc()
                     msg->mtype = DEFAULT;
                     //forward char input to CRT
                     send_message(PID_CRT, msg);
-                    
+
                     break;
                 }
                 case KCD_REG:
                     if (num_commands < MEM_BLK_SIZE && msg->mtext[0] == '%') {
                         command_exists = FALSE;
-                        
+
                          // determine if command was already registered
                         for (i = 0; i < num_commands; ++i) {
                             cmd_buf = msg->mtext;

@@ -29,7 +29,7 @@ void wall_clock_proc(void)
 	msg->mtext[1] = 'W';
 	msg->mtext[2] = '\0';
 	send_message(PID_KCD, (void *)msg);
-	
+
 	msg = (MSG_BUF *) request_memory_block();
 	msg->mtype = WALL_CLOCK;
 	increment = delayed_send(PID_CLOCK, msg, SECOND);
@@ -68,7 +68,7 @@ void wall_clock_proc(void)
 						min += to_int(msg->mtext[8]); 		//second minute digit
 						sec = to_int(msg->mtext[10]) * 10; 	//first second digit
 						sec += to_int(msg->mtext[11]); 		//second second digit
-					
+
 						if (hr <= 23 && min <= 60 && sec <= 60 && hr >= 0 && min >= 0 && sec >= 0) {
 							clock_count = (sec + (min + hr * 60) * 60);
 							if (increment == RTX_ERR) {  //send if prev delayed send failed
@@ -79,7 +79,7 @@ void wall_clock_proc(void)
 							}
 							clock_is_on = TRUE;
 							display_time(clock_count);
-						}	
+						}
 					}
 				break;
 
@@ -128,6 +128,6 @@ void display_time(int curr_time) {
 	display_msg->mtext[7] = s % 10 + '0';
 	display_msg->mtext[8] = '\r';
 	display_msg->mtext[9] = '\0';
-	
+
 	send_message(PID_CRT, display_msg);
 }
