@@ -10,8 +10,8 @@
 #define RTX_OK 0
 
 //number of processes
-#define NUM_TEST_PROCS 6
-#define NUM_PROCS 13
+#define NUM_TEST_PROCS 8
+#define NUM_PROCS 15
 
 //common status values
 #define NULL 0
@@ -29,6 +29,7 @@
 #define KCD_REG 1
 #define UART_INPUT 2
 #define WALL_CLOCK 3
+#define COUNT_REPORT 4
 
 /* Process IDs */
 #define PID_NULL 0

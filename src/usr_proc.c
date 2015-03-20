@@ -77,6 +77,11 @@ void set_test_procs() {
 	g_test_procs[3].mpf_start_pc = &priority_test;
 	g_test_procs[4].mpf_start_pc = &preemption_check;
 	g_test_procs[5].mpf_start_pc = &blocked_resource_test;
+	g_test_procs[6].mpf_start_pc = &stress_test_A;
+	g_test_procs[7].mpf_start_pc = &stress_test_B;
+	
+	g_test_procs[6].m_priority = HIGH;
+	g_test_procs[7].m_priority = HIGH;
 
 	set_up_testing_statements();
 }
@@ -367,3 +372,57 @@ void blocked_resource_test(void)
 	}
 }
 
+/**
+ * @brief: Stress test A: Tests recieving commands
+ * and then continuously sends messages to stress test B 
+ * if there is still memory
+*/
+void stress_test_A(void)
+{
+	MSG_BUF *msg = NULL;
+	int num = 0;
+	int sender_id = -1;
+	
+	msg = (MSG_BUF *)request_memory_block();
+	msg->mtype = KCD_REG;
+	msg->mtext[0] = '%';
+	msg->mtext[1] = 'Z';
+	msg->mtext[2] = '\0';
+	send_message(PID_KCD, msg);
+	
+	while (TRUE) {
+		msg = (MSG_BUF *)receive_message(&sender_id);
+		if (sender_id == PID_KCD && msg->mtext[0] == '%' && msg->mtext[1] == 'Z') {
+			release_memory_block(msg);
+			break;
+		}else{
+			release_memory_block(msg);
+		}
+
+		release_memory_block(msg);
+	}
+	
+	while (TRUE) {
+		msg = (MSG_BUF *)request_memory_block();
+		msg->mtype = COUNT_REPORT;
+		msg->mtext[0] = num;//don't think this actually works
+		msg->mtext[1] = '\0';
+		send_message(PID_B, msg);
+		num = num + 1;
+		release_processor();
+	}
+}
+
+/**
+ * @brief: Stress test B: Forwards messages on to stress test C
+*/
+void stress_test_B(void)
+{
+	MSG_BUF *msg = NULL;
+	int sender_id = -1;
+	while (TRUE) {
+		msg = (MSG_BUF *)receive_message(&sender_id);
+		send_message(PID_C, msg);
+	}
+	
+}

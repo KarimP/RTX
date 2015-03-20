@@ -27,5 +27,7 @@ void memory_management_test(void);
 void priority_test(void);
 void preemption_check(void);
 void blocked_resource_test(void);
+void stress_test_A(void);
+void stress_test_B(void);
 
 #endif /* USR_PROC_H_ */

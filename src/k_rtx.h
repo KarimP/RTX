@@ -19,10 +19,10 @@
 #define HIGHEST_PRIORITY 0
 
 //number of processes
-#define NUM_TEST_PROCS 6
+#define NUM_TEST_PROCS 8
 #define NUM_OS_PROCS 5
 #define NUM_I_PROCS 2
-#define NUM_PROCS 13
+#define NUM_PROCS 15
 
 //common status values
 #define NULL 0
