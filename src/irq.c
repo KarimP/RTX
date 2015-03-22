@@ -35,7 +35,6 @@ void uart_irq_proc(char key)
 	LPC_UART_TypeDef *pUart = (LPC_UART_TypeDef *)LPC_UART0;
 	MSG_BUF *msg = NULL;
 	char *buf = '\0';
-	int forward_to_kcd = TRUE;
 
 	#ifdef DEBUG_1
 	printf("\n uart iprocess running \n");
@@ -45,31 +44,26 @@ void uart_irq_proc(char key)
 	switch (key) { // printing process list and memory blocks available still left
 		case '!':
 			print_ready_procs();
-			forward_to_kcd = FALSE;
 			break;
 		// case '"':
 		case '@':
 			print_mem_blocked_procs();
-			forward_to_kcd = FALSE;
 			break;
 		// case '/':
 		case '#':
 			print_receive_blocked_procs();
-			forward_to_kcd = FALSE;
 			break;
 		case '$':
 			print_number_of_memory_blocks();
-			forward_to_kcd = FALSE;
 			break;
 		// case '?':
 		case '^':
 			print_list_of_processes();
-			forward_to_kcd = FALSE;
 			break;
 	}
 	#endif
 
-	if (forward_to_kcd && key) {
+	if (key) {
 		msg = (MSG_BUF *) k_non_blocking_request_memory_block();
 		if (msg) {
 			msg->mtype = UART_INPUT;

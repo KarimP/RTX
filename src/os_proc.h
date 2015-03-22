@@ -13,7 +13,8 @@
 #include "irq.h"
 #include "crt.h"
 #include "wall_clock.h"
- #include "set_priority.h"
+#include "set_priority.h"
+#include "stress_proc.h"
 
 void null_proc(void);
 

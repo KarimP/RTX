@@ -7,7 +7,11 @@
 #ifndef K_QUEUE_H_
 #define K_QUEUE_H_
 
-#include "k_rtx.h"
+//#include "k_rtx.h"
+
+#define RTX_ERR -1
+#define RTX_OK  0
+#define NULL 0
 
 typedef struct queue_node
 {

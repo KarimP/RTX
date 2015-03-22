@@ -2,7 +2,7 @@
 #ifndef K_MESSAGE_H_
 #define K_MESSAGE_H_
 
-#include "k_rtx.h"
+//#include "k_rtx.h"
 #include "k_queue.h"
 
 /* Kernel message envelope  */

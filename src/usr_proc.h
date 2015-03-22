@@ -16,7 +16,7 @@
 #endif /* DEBUG_0 */
 
 #define NUM_TESTS 4
-#define PROC_1_DELAY 50//10000
+#define PROC_1_DELAY 100
 
 void set_test_procs(void);
 
@@ -27,7 +27,5 @@ void memory_management_test(void);
 void priority_test(void);
 void preemption_check(void);
 void blocked_resource_test(void);
-void stress_test_A(void);
-void stress_test_B(void);
 
 #endif /* USR_PROC_H_ */

@@ -15,8 +15,8 @@ int passedtest = 0;
 
 int process4_preempted = FALSE;
 int testing_priority = FALSE;
-int process_6_blocked = FALSE;
-void *mem_blks[NUM_BLOCKS];
+// int process_6_blocked = FALSE;
+// void *mem_blks[NUM_BLOCKS];
 
 void set_up_testing_statements() {
 
@@ -67,8 +67,8 @@ void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_test_procs[i].m_pid=(U32)(i+1);
-		g_test_procs[i].m_priority=MEDIUM;
-		g_test_procs[i].m_stack_size=0x200;
+		g_test_procs[i].m_priority=LOW;
+		g_test_procs[i].m_stack_size=0x150;
 	}
 
 	g_test_procs[0].mpf_start_pc = &send_message_test;
@@ -77,11 +77,6 @@ void set_test_procs() {
 	g_test_procs[3].mpf_start_pc = &priority_test;
 	g_test_procs[4].mpf_start_pc = &preemption_check;
 	g_test_procs[5].mpf_start_pc = &blocked_resource_test;
-	g_test_procs[6].mpf_start_pc = &stress_test_A;
-	g_test_procs[7].mpf_start_pc = &stress_test_B;
-	
-	g_test_procs[6].m_priority = HIGH;
-	g_test_procs[7].m_priority = HIGH;
 
 	set_up_testing_statements();
 }
@@ -97,8 +92,16 @@ void send_message_test(void)
 	int sender_id = -1;
 
 	//send delayed message (to be used in testing with proccess 6)
+	// msg = (MSG_BUF *)request_memory_block();
+	// delayed_send(PID_P1, msg, PROC_1_DELAY);
+
+	//send delayed message to process 6 (for process 6 receive message test)
 	msg = (MSG_BUF *)request_memory_block();
-	delayed_send(PID_P1, msg, PROC_1_DELAY);
+	msg->mtype = DEFAULT;
+	msg->mtext[0] = 'h';
+	msg->mtext[1] = 'i';
+	msg->mtext[2] = '\0';
+	delayed_send(PID_P6, msg, PROC_1_DELAY);
 
 	//send message to process 2 (for process 2 receive message test)
 	msg = (MSG_BUF *)request_memory_block();
@@ -118,9 +121,7 @@ void send_message_test(void)
 
 	while (TRUE) {
 		msg = (MSG_BUF *)receive_message(&sender_id);
-		if (sender_id == PID_P1) {
-			process_6_blocked = FALSE;
-		} else if (sender_id == PID_KCD && msg->mtext[0] == '%' && msg->mtext[1] == 'R') {
+		if (sender_id == PID_KCD && msg->mtext[0] == '%' && msg->mtext[1] == 'R') {
 			msg->mtext[0] = '\r';
 			msg->mtext[1] = '1';
 			msg->mtext[2] = ' ';
@@ -251,7 +252,8 @@ void priority_test(void)
 {
 	int ran = FALSE;
 	int passed = TRUE;
-	testing_priority = TRUE;
+	int current_priority = LOW;
+	testing_priority = TRUE;	
 
 	while (TRUE) {
 		if (!ran) {
@@ -268,22 +270,27 @@ void priority_test(void)
 			}
 
 			//set this processes' priority to the same one
-			if (set_process_priority(PID_P4, MEDIUM) == RTX_ERR) {
+			if (set_process_priority(PID_P4, current_priority) == RTX_ERR) {
 				passed = FALSE;
 			}
 
 			//set this processes' priority to a higher one
-			if (set_process_priority(PID_P4, HIGH) == RTX_ERR) {
+			if (set_process_priority(PID_P4, current_priority-1) == RTX_ERR) {
 				passed = FALSE;
 			}
 
 			//go back to medium
-			if (set_process_priority(PID_P4, MEDIUM) == RTX_ERR) {
+			if (set_process_priority(PID_P4, current_priority) == RTX_ERR) {
+				passed = FALSE;
+			}
+
+			//set non-current process priority lower than lowest
+			if (set_process_priority(PID_P5, LOWEST+1) != RTX_ERR) {
 				passed = FALSE;
 			}
 
 			//set non-current process priority lower than current
-			if (set_process_priority(PID_P5, LOW) == RTX_ERR) {
+			if (set_process_priority(PID_P5, current_priority+1) == RTX_ERR) {
 				passed = FALSE;
 			}
 
@@ -294,7 +301,7 @@ void priority_test(void)
 
 			//set another processes priority to higher than this one
 			process4_preempted = TRUE;
-			if (set_process_priority(PID_P5, HIGH) == RTX_ERR) {
+			if (set_process_priority(PID_P5, current_priority-1) == RTX_ERR) {
 				testing_priority = FALSE;
 				release_processor();
 			}
@@ -315,7 +322,7 @@ void preemption_check(void)
 		if (!ran) {
 			ran = TRUE;
 
-			if (set_process_priority(PID_P5, MEDIUM) == RTX_ERR) {
+			if (set_process_priority(PID_P5, LOW) == RTX_ERR) {
 				passed = FALSE;
 			}
 
@@ -340,89 +347,43 @@ void preemption_check(void)
 }
 
 /**
- * @brief: Process 6: Allocates all blocks of memory
- *	blocks on resource state for ~10 seconds
- * until process 1 unblocks
+ * @brief: Process 6: Receives delayed message sent from process 1
+ *	blocks on receive for ~10 seconds, recieves message then is blocked on receive indefinitely
 */
 void blocked_resource_test(void)
 {
-	int i = 0, ran = FALSE, unblocked = FALSE;
-
-	while (TRUE) {
-
-		if (!ran) {
-			i = 0;
-			ran = TRUE;
-			process_6_blocked = TRUE;
-
-			while (process_6_blocked) {
-				mem_blks[i++] = request_memory_block();
-			}
-
-			unblocked = TRUE;
-
-			while (i >= 0) {
-				release_memory_block(mem_blks[--i]);
-			}
-
-			printTestResults(unblocked);
-		}
-
-		release_processor();
-	}
-}
-
-/**
- * @brief: Stress test A: Tests recieving commands
- * and then continuously sends messages to stress test B 
- * if there is still memory
-*/
-void stress_test_A(void)
-{
-	MSG_BUF *msg = NULL;
-	int num = 0;
-	int sender_id = -1;
-	
-	msg = (MSG_BUF *)request_memory_block();
-	msg->mtype = KCD_REG;
-	msg->mtext[0] = '%';
-	msg->mtext[1] = 'Z';
-	msg->mtext[2] = '\0';
-	send_message(PID_KCD, msg);
-	
-	while (TRUE) {
-		msg = (MSG_BUF *)receive_message(&sender_id);
-		if (sender_id == PID_KCD && msg->mtext[0] == '%' && msg->mtext[1] == 'Z') {
-			release_memory_block(msg);
-			break;
-		}else{
-			release_memory_block(msg);
-		}
-
-		release_memory_block(msg);
-	}
-	
-	while (TRUE) {
-		msg = (MSG_BUF *)request_memory_block();
-		msg->mtype = COUNT_REPORT;
-		msg->mtext[0] = num;//don't think this actually works
-		msg->mtext[1] = '\0';
-		send_message(PID_B, msg);
-		num = num + 1;
-		release_processor();
-	}
-}
-
-/**
- * @brief: Stress test B: Forwards messages on to stress test C
-*/
-void stress_test_B(void)
-{
+	// int i = 0, ran = FALSE, unblocked = FALSE;
 	MSG_BUF *msg = NULL;
 	int sender_id = -1;
+	int passed = TRUE;
+
 	while (TRUE) {
 		msg = (MSG_BUF *)receive_message(&sender_id);
-		send_message(PID_C, msg);
+		passed = TRUE;
+		if (msg->mtext[0] != 'h' || msg->mtext[1] != 'i' || msg->mtext[2] != '\0' || sender_id != PID_P1) {
+			passed = FALSE;
+		}
+
+		printTestResults(passed);
+
+		// if (!ran) {
+		// 	i = 0;
+		// 	ran = TRUE;
+		// 	process_6_blocked = TRUE;
+
+		// 	while (process_6_blocked) {
+		// 		mem_blks[i++] = request_memory_block();
+		// 	}
+
+		// 	unblocked = TRUE;
+
+		// 	while (i >= 0) {
+		// 		release_memory_block(mem_blks[--i]);
+		// 	}
+
+		// 	printTestResults(unblocked);
+		// }
+
+		// release_processor();
 	}
-	
 }

@@ -167,6 +167,7 @@ int setup_heap(void)
   	// allocate memory for heap memory queue
 	heap_q = (queue*)p_end;
 	p_end += sizeof(queue);//sizeof(mem_q) + sizeof(queue);
+	gp_stack -= 128/4; //buffer for print between heap and stack
 
 	initialize_queue(heap_q);
 	//initialize memory linked list
@@ -179,7 +180,7 @@ int setup_heap(void)
 		if ((U32*)heap_q->last + MEM_BLK_SIZE >= gp_stack) break;
 	}
 
-	#ifdef DEBUG_1
+	#ifdef DEBUG_0
 	printf("We have %d memory blocks\n\r", i);
 	printf("heap_q->first = 0x%x \n\r", heap_q->first);
 	printf("heap_q->last = 0x%x \n\r", heap_q->last);

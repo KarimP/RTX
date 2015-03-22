@@ -26,10 +26,16 @@ void set_priority(void)
     while (TRUE)
     {
         msg = (MSG_BUF *) receive_message(&sender_id);
+        
         valid = TRUE;
+        pid_digit_1 = -1;
+        pid_digit_2 = -1;
+        priority = -1;
+        pid = -1;
+        i = 3;
 
         if (sender_id == PID_KCD && msg->mtext[0] == '%' && msg->mtext[1] == 'C' &&  msg->mtext[2] == ' ') {
-            i = 3;
+            
 
             pid_digit_1 = msg->mtext[i++] - '0';
             if (msg->mtext[i] != ' ') {
@@ -81,7 +87,8 @@ void set_priority(void)
             msg->mtext[11] = 'u';
             msg->mtext[12] = 't';
             msg->mtext[13] = '!';
-            msg->mtext[14] = '\0';
+            msg->mtext[14] = '\r';
+            msg->mtext[15] = '\0';
             send_message(PID_CRT, msg);
         }
     }

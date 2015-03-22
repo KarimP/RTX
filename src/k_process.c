@@ -253,7 +253,7 @@ int ready_process(PCB *proc, int pid)
     proc->m_state = RDY;
     pop_queue(blocked_queue, pid, proc_priority);
     enqueue_priority_queue(ready_queue, proc, proc_priority);
-    return (current_priority < proc_priority);
+    return (current_priority > proc_priority);
 }
 
 // sends a message by passing in a kernel msg envelope

@@ -19,10 +19,10 @@
 #define HIGHEST_PRIORITY 0
 
 //number of processes
-#define NUM_TEST_PROCS 8
-#define NUM_OS_PROCS 5
+#define NUM_TEST_PROCS 6
+#define NUM_OS_PROCS 8
 #define NUM_I_PROCS 2
-#define NUM_PROCS 15
+#define NUM_PROCS 16
 
 //common status values
 #define NULL 0
@@ -36,6 +36,8 @@
 #define KCD_REG 1
 #define UART_INPUT 2
 #define WALL_CLOCK 3
+#define COUNT_REPORT 4
+#define HIBERNATE 5
 
 /* Process IDs */
 #define PID_NULL 0
@@ -56,12 +58,12 @@
 #define PID_UART_IPROC   15
 
 /* Process Indices */
-#define INDEX_TIMER_IPROC  11
-#define INDEX_UART_IPROC   12
+#define INDEX_TIMER_IPROC  14
+#define INDEX_UART_IPROC   15
 
 //Memory management
 #define MEM_BLK_SIZE 128
-#define NUM_BLOCKS 30
+#define NUM_BLOCKS 80
 
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */
