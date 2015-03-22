@@ -16,7 +16,7 @@
 #endif /* DEBUG_0 */
 
 #define NUM_TESTS 4
-#define PROC_1_DELAY 10000
+#define PROC_1_DELAY 500 //10000
 
 void set_test_procs(void);
 

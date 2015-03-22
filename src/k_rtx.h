@@ -65,6 +65,9 @@
 #define MEM_BLK_SIZE 128
 #define NUM_BLOCKS 80
 
+//IPC
+#define NUM_ENVELOPES 10
+
 #ifdef DEBUG_0
 #define USR_SZ_STACK 0x200         /* user proc stack size 512B   */
 #else

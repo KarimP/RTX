@@ -15,6 +15,7 @@ int passedtest = 0;
 
 int process4_preempted = FALSE;
 int testing_priority = FALSE;
+int default_priority = LOWEST;
 // int process_6_blocked = FALSE;
 // void *mem_blks[NUM_BLOCKS];
 
@@ -67,7 +68,7 @@ void set_test_procs() {
 	int i;
 	for( i = 0; i < NUM_TEST_PROCS; i++ ) {
 		g_test_procs[i].m_pid=(U32)(i+1);
-		g_test_procs[i].m_priority=LOW;
+		g_test_procs[i].m_priority=default_priority;
 		g_test_procs[i].m_stack_size=0x150;
 	}
 
@@ -252,7 +253,6 @@ void priority_test(void)
 {
 	int ran = FALSE;
 	int passed = TRUE;
-	int current_priority = LOW;
 	testing_priority = TRUE;	
 
 	while (TRUE) {
@@ -270,17 +270,17 @@ void priority_test(void)
 			}
 
 			//set this processes' priority to the same one
-			if (set_process_priority(PID_P4, current_priority) == RTX_ERR) {
+			if (set_process_priority(PID_P4, default_priority) == RTX_ERR) {
 				passed = FALSE;
 			}
 
 			//set this processes' priority to a higher one
-			if (set_process_priority(PID_P4, current_priority-1) == RTX_ERR) {
+			if (set_process_priority(PID_P4, default_priority-1) == RTX_ERR) {
 				passed = FALSE;
 			}
 
 			//go back to medium
-			if (set_process_priority(PID_P4, current_priority) == RTX_ERR) {
+			if (set_process_priority(PID_P4, default_priority) == RTX_ERR) {
 				passed = FALSE;
 			}
 
@@ -290,7 +290,7 @@ void priority_test(void)
 			}
 
 			//set non-current process priority lower than current
-			if (set_process_priority(PID_P5, current_priority+1) == RTX_ERR) {
+			if (default_priority < LOWEST && set_process_priority(PID_P5, default_priority+1) == RTX_ERR) {
 				passed = FALSE;
 			}
 
@@ -301,7 +301,7 @@ void priority_test(void)
 
 			//set another processes priority to higher than this one
 			process4_preempted = TRUE;
-			if (set_process_priority(PID_P5, current_priority-1) == RTX_ERR) {
+			if (set_process_priority(PID_P5, default_priority-1) == RTX_ERR) {
 				testing_priority = FALSE;
 				release_processor();
 			}
@@ -322,7 +322,7 @@ void preemption_check(void)
 		if (!ran) {
 			ran = TRUE;
 
-			if (set_process_priority(PID_P5, LOW) == RTX_ERR) {
+			if (set_process_priority(PID_P5, default_priority) == RTX_ERR) {
 				passed = FALSE;
 			}
 

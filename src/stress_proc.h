@@ -5,7 +5,7 @@
 #include "k_queue.h"
 #include "k_message.h"
 
-#define DELAY10 10000
+#define DELAY10 1000 //10000
 
 void proc_A(void);
 void proc_B(void);
