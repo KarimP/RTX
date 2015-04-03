@@ -63,6 +63,11 @@ void proc_B(void)
     }
 }
 
+/**
+ * @brief: Stress test C: Enqueues messages onto local message 
+ * queue while hibernating for 10 seconds and processes the
+ * messages.
+*/
 void proc_C(void)
 {
     MSG_BUF *p;

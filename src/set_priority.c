@@ -4,6 +4,10 @@
 #include "printf.h"
 #endif /* DEBUG_0 */
 
+/**
+ * @brief: A process which registers with the KCD which
+ * changes the priority of a specified process.
+*/
 void set_priority(void)
 {
     int sender_id = -1;
