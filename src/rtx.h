@@ -119,4 +119,23 @@ extern void *_receive_message(U32 p_func, void *p_pid) __SVC_0;
 extern int k_delayed_send(int pid, void *p_msg, int delay);
 #define delayed_send(pid, p_msg, delay) _delayed_send((U32)k_delayed_send, pid, p_msg, delay)
 extern int _delayed_send(U32 p_func, int pid, void *p_msg, int delay) __SVC_0;
+
+// Timing Analysis - Switch to timed methods that use second timer if DEBUG_TIME_* flag is set
+#ifdef DEBUG_TIME_MEMORY
+void *request_memory_block_timed(void);
+#undef request_memory_block
+#define request_memory_block(void) request_memory_block_timed(void)
+
+#elif DEBUG_TIME_SEND
+int send_message_timed(int, void*);
+#undef send_message
+#define send_message(pid, p_msg) send_message_timed(pid, p_msg)
+
+#elif DEBUG_TIME_RECEIVE
+void *receive_message_timed(int*);
+#undef receive_message
+#define receive_message(p_pid) receive_message_timed(p_pid)
+
+#endif /* DEBUG_TIME_MEMORY */
+
 #endif /* !RTX_H_ */

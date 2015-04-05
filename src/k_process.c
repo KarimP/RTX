@@ -42,8 +42,10 @@ extern process_queue **blocked_queue;
 extern mem_q heap_q;
 
 int is_atomic = OFF;
-// int num_env = NUM_ENVELOPES;
 int receiving_proc_unblock = TRUE;
+
+extern int pause_timer(void);
+extern void continue_timer(void);
 
 /**
  * @biref: initialize all processes in the system
@@ -293,13 +295,6 @@ int k_send_message(int receiving_pid, void *message_envelope)
 		return RTX_ERR;
 	}
 
-	// if (num_env <= 0) {
-	// 	printf("%d \r\n", num_env);
-	// 	k_non_blocking_release_memory_block(message_envelope);
-	// 	atomic(OFF);
-	// 	return RTX_ERR;	
-	// }
-
 	msg = k_non_blocking_request_memory_block();
 
 	if (msg == NULL) {
@@ -321,7 +316,11 @@ int k_send_message(int receiving_pid, void *message_envelope)
 		//set state to ready, and move from blocked queue to ready queue
         if (ready_process(receiving_proc, msg->d_pid)) {
         	atomic(OFF);
+        	pause_timer(); //pause timer for timing analysis (to get a more accurate time)
+
 			k_release_processor();
+
+			continue_timer(); //continue timer for timing analysis (to get a more accurate time)
 			atomic(ON);
         }
 	}
@@ -341,12 +340,6 @@ int k_non_blocking_send_message(int receiving_pid, void *message_envelope)
 		return RTX_ERR;
 	}
 
-	// if (num_env <= 0) {
-	// 	k_non_blocking_release_memory_block(message_envelope);
-	// 	atomic(OFF);
-	// 	return RTX_ERR;	
-	// }
-
 	msg = k_non_blocking_request_memory_block();
 
 	if (msg == NULL) {
@@ -361,7 +354,6 @@ int k_non_blocking_send_message(int receiving_pid, void *message_envelope)
 	receiving_proc = get_pcb_from_pid(msg->d_pid);
 
 	enqueue(receiving_proc->msg_q, (queue_node*) msg);
-	// num_env--;
 
 	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
 		//set state to ready, and move from blocked queue to ready queue
@@ -388,12 +380,6 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 		atomic(OFF);
 		return k_send_message(receiving_pid, message_envelope);
 	}
-
-	// if (num_env <= 0) {
-	// 	k_non_blocking_release_memory_block(message_envelope);
-	// 	atomic(OFF);
-	// 	return RTX_ERR;
-	// }
 
 	new_msg = k_non_blocking_request_memory_block();
 	if (new_msg == NULL) {
@@ -428,8 +414,6 @@ int k_delayed_send(int receiving_pid, void *message_envelope, int delay)
 		enqueue(delayed_queue, (queue_node *)new_msg);
 	}
 
-	// num_env--;
-
 	atomic(OFF);
 	return RTX_OK;
 }
@@ -448,12 +432,15 @@ void *k_receive_message(int *sender_id)
         block_process(gp_current_process, gp_current_process->m_pid, BLOCKED_ON_RECEIVE);
 
     	atomic(OFF);
+    	pause_timer(); //pause timer for timing analysis (to get a more accurate time)
+
 		k_release_processor();
+
+		continue_timer(); //continue timer for timing analysis (to get a more accurate time)
 		atomic(ON);
 	}
 
 	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
-	// num_env++;
 
 	if (msg != NULL) {
 		*sender_id = (int)msg->s_pid;
@@ -477,7 +464,6 @@ void *k_non_blocking_receive_message(int *sender_id)
 	msg = (msg_Node*)dequeue((gp_current_process->msg_q));
 
 	if (msg != NULL) {
-		// num_env++;
 		*sender_id = (int)msg->s_pid;
 		msgbuf = msg->msgbuf;
 		k_non_blocking_release_memory_block((void *) msg);

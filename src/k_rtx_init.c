@@ -18,12 +18,14 @@ void k_rtx_init(void)
     uart0_irq_init(); //irq, for console input
     uart1_init(); //polling, for DEBUGGING
 
-    timer_init(0);
+    timer_init(0); //main timer
+    timer_init(1); //testing timer
+
     memory_init();
     process_init();
     setup_heap();
     atomic(OFF);
 
-		/* start the first process */
+	/* start the first process */
     k_release_processor();
 }
