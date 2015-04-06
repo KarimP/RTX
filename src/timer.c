@@ -96,8 +96,6 @@ uint32_t timer_init(uint8_t n_timer)
 		*/
 		pTimer->MCR = BIT(0) | BIT(1);
 
-		g_timer = 0;
-
 		/* Step 4.4: CSMSIS enable timer0 IRQ */
 		NVIC_EnableIRQ(TIMER0_IRQn);
 
@@ -166,24 +164,11 @@ uint32_t timer_init(uint8_t n_timer)
 		*/
 		pTimer->MCR = BIT(0) | BIT(1);
 
-		g_timer = 0;
-
 		/* Step 4.4: CSMSIS enable timer1 IRQ */
 		NVIC_EnableIRQ(TIMER1_IRQn);
 
 		/* Step 4.5: Enable the TCR. See table 427 on pg494 of LPC17xx_UM. */
 		pTimer->TCR = 1;
-
-		//////////////////////////////////////////////////////////
-		// pTimer->PR = 124;
-		// pTimer->TCR = 0x02; // counter reset, table 427 on pg494 of LPC17xx_UM
-		// pTimer->TCR = 0x01; // counter enable, table 427 on pg494 of LPC17xx_UM
-		// pTimer->MCR &= ~BIT(0);
-		// pTimer->MCR &= ~BIT(1);
-		// pTimer->MCR = BIT(0) | BIT(1);
-
-		// NVIC_EnableIRQ(TIMER1_IRQn);
-		// return 1;
 	}
 
 	return 0;

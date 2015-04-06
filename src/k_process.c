@@ -310,7 +310,6 @@ int k_send_message(int receiving_pid, void *message_envelope)
 	receiving_proc = get_pcb_from_pid(msg->d_pid);
 
 	enqueue(receiving_proc->msg_q, (queue_node*) msg);
-	// num_env--;
 
 	if (receiving_proc->m_state == BLOCKED_ON_RECEIVE) {
 		//set state to ready, and move from blocked queue to ready queue
