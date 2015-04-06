@@ -235,10 +235,6 @@ void *k_request_memory_block(void)
 	mem_blk blk = NULL;
 
 	#ifdef DEBUG_1
-	int timer = start_timer();
-	#endif /* DEBUG_0 */
-
-	#ifdef DEBUG_1
 	printf("k_request_memory_block: entering...\n\r");
 	#endif /* ! DEBUG_1 */
 
@@ -273,14 +269,6 @@ void *k_request_memory_block(void)
 	#ifdef DEBUG_1
 	printf("k_request_memory_block: exiting...\n\rblk requested is: 0x%x \nReturned blk is: 0x%x \nheap_q->first is: 0x%x \n\r\n\r", blk, blk + 1, heap_q->first);
 	#endif /* ! DEBUG_1 */
-
-	#ifdef DEBUG_1
-	if (timer) {
-		timer = pause_timer();
-		printf("Call took: %d us \r\n", timer);	
-		stop_timer();
-	}
-	#endif /* DEBUG_0 */
 
 	atomic(OFF);
 	return blk;

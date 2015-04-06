@@ -16,8 +16,6 @@ int passedtest = 0;
 int process4_preempted = FALSE;
 int testing_priority = FALSE;
 int default_priority = LOWEST;
-// int process_6_blocked = FALSE;
-// void *mem_blks[NUM_BLOCKS];
 
 void set_up_testing_statements() {
 
@@ -91,10 +89,6 @@ void send_message_test(void)
 {
 	MSG_BUF *msg = NULL;
 	int sender_id = -1;
-
-	//send delayed message (to be used in testing with proccess 6)
-	// msg = (MSG_BUF *)request_memory_block();
-	// delayed_send(PID_P1, msg, PROC_1_DELAY);
 
 	//send delayed message to process 6 (for process 6 receive message test)
 	msg = (MSG_BUF *)request_memory_block();
@@ -365,25 +359,5 @@ void blocked_resource_test(void)
 		}
 
 		printTestResults(passed);
-
-		// if (!ran) {
-		// 	i = 0;
-		// 	ran = TRUE;
-		// 	process_6_blocked = TRUE;
-
-		// 	while (process_6_blocked) {
-		// 		mem_blks[i++] = request_memory_block();
-		// 	}
-
-		// 	unblocked = TRUE;
-
-		// 	while (i >= 0) {
-		// 		release_memory_block(mem_blks[--i]);
-		// 	}
-
-		// 	printTestResults(unblocked);
-		// }
-
-		// release_processor();
 	}
 }
