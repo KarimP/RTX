@@ -348,7 +348,7 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>DEBUG_0, DEBUG_HOTKEYS DEBUG_TIME_MEMORY</Define>
+              <Define>DEBUG_0, DEBUG_HOTKEYS</Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
